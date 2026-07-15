@@ -43,7 +43,6 @@ Agents must not:
 
 ## Repository contents
 
-```text
 .codex/      Project-scoped Codex configuration and agents
 agents/      Reusable agent definitions
 docs/        Operating model and process documentation
