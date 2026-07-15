@@ -1,0 +1,20 @@
+id: FE-001
+title: Replace with a bounded task title
+role: frontend_engineer
+status: draft
+risk: low
+requirement_ids:
+  - REQ-001
+dependencies: []
+allowed_paths:
+  - app/**
+forbidden_paths:
+  - .env
+  - .env.*
+acceptance_criteria:
+  - Replace with observable acceptance criteria.
+verification_commands:
+  - pnpm test
+required_evidence:
+  - Command output summary.
+human_gate: true
