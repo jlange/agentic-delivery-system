@@ -43,17 +43,15 @@ Agents must not:
 
 ## Repository contents
 
-.codex/      Project-scoped Codex configuration and agents
-agents/      Reusable agent definitions
-docs/        Operating model and process documentation
-examples/    Sanitized sample projects and artifacts
-schemas/     Task and artifact validation schemas
-scripts/     Setup and workflow automation
-skills/      Reusable agent skills
-templates/   Client-project and delivery-document templates
-tests/       Tests for scripts, schemas, and automation
-Status
-This repository is currently being scaffolded. No production client work should use it until the supervised pilot has completed successfully.
+- .codex/      Project-scoped Codex configuration and agents
+- agents/      Reusable agent definitions
+- docs/        Operating model and process documentation
+- examples/    Sanitized sample projects and artifacts
+- schemas/     Task and artifact validation schemas
+- scripts/     Setup and workflow automation
+- skills/      Reusable agent skills
+- templates/   Client-project and delivery-document templates
+- tests/       Tests for scripts, schemas, and automation
 
 ## Status
 
