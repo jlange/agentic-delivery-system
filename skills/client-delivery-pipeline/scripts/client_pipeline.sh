@@ -175,56 +175,60 @@ Review source:
 
 ## Scope decision
 
-- [ ] Initial scope is spreadsheet aggregation only.
-- [ ] Meeting-minutes automation is included in initial scope.
-- [ ] Meeting-minutes automation is deferred.
-- [ ] Broader audits/forms/source-document automation is deferred.
-- [ ] Other:
+- [ ] Initial scope is clear enough to describe in one paragraph.
+- [ ] Initial scope is limited to a first phase or demo.
+- [ ] Out-of-scope items are listed.
+- [ ] Follow-up or future-phase ideas are separated from initial scope.
+- [ ] Decision pending.
 
 ## Data access decision
 
-- [ ] Development will use synthetic sample workbooks.
-- [ ] Development will use redacted sample workbooks.
-- [ ] Development will use approved real workbooks.
-- [ ] No real facility data will be shared before agreement terms are approved.
-- [ ] Other:
+- [ ] Synthetic data will be used.
+- [ ] Redacted client data will be used.
+- [ ] Approved real client data will be used.
+- [ ] No real client data will be used before agreement terms are approved.
+- [ ] Data handling requirements are unclear and need follow-up.
+- [ ] Decision pending.
 
-## Output decision
+## Deliverable decision
 
-- [ ] Tool updates the existing master dashboard directly.
-- [ ] Tool creates a review copy of the master dashboard.
-- [ ] Tool creates a separate generated output workbook.
+- [ ] Deliverable type is defined.
+- [ ] Demo output is defined.
+- [ ] Production output is defined.
+- [ ] Review/approval output is defined.
 - [ ] Decision pending.
 
 ## Environment decision
 
-- [ ] Tool will run manually.
-- [ ] Tool will run on a facility work laptop.
-- [ ] Tool will run on a facility-accessible network drive.
+- [ ] Local demo environment is acceptable.
+- [ ] Client environment is required.
+- [ ] Hosting/deployment target is defined.
 - [ ] IT/security approval is required before execution.
 - [ ] Decision pending.
 
 ## Contract and approval
 
-- [ ] Supervisor approval is required.
+- [ ] Authorized approver is identified.
 - [ ] NDA or confidentiality terms are required.
 - [ ] Written proposal is required.
 - [ ] Budget approval is required.
 - [ ] Data-sharing terms are required.
+- [ ] Compliance, privacy, or legal review is required.
 
 ## Open questions to resolve
 
-- [ ] Which specific spreadsheets are in phase one?
-- [ ] Which dashboard fields are in phase one?
-- [ ] Are quarterly averages required?
-- [ ] Are red/green indicators required?
-- [ ] Who runs the tool?
-- [ ] What validation process is required?
-- [ ] What policies apply to scripts, AI tools, and external processing?
+- [ ] What exact deliverables are included in phase one?
+- [ ] What exact data/files/systems are in scope?
+- [ ] What validation or acceptance process is required?
+- [ ] Who will use or operate the deliverable?
+- [ ] What environment will the deliverable run in?
+- [ ] What policies apply to AI tools, scripts, storage, and external processing?
+- [ ] What timeline, budget, or approval constraints apply?
 
 ## Human notes
 
 Add review notes here.
+EOF
 EOF
 
   echo "Wrote $root/decisions/intake_review_checklist.md"
