@@ -53,3 +53,7 @@ temp/
 # Local agent artifacts
 .codex/local/
 evidence/local/
+
+# Python cache
+__pycache__/
+*.pyc

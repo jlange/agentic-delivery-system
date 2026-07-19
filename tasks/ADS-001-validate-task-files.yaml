@@ -1,0 +1,32 @@
+id: ADS-001
+title: Validate approved delivery task files
+role: devops_engineer
+status: approved
+risk: low
+requirement_ids:
+  - REQ-001
+dependencies: []
+allowed_paths:
+  - scripts/validate-task.py
+  - tests/test_validate_task.py
+  - requirements-dev.txt
+  - scripts/check-scaffold.sh
+  - docs/learnings/task-validation.md
+  - tasks/ADS-001-validate-task-files.yaml
+forbidden_paths:
+  - clients/**
+  - /mnt/**
+  - .env
+  - .env.*
+acceptance_criteria:
+  - Approved task YAML files can be validated against the canonical task schema.
+  - Draft or otherwise unapproved tasks are rejected.
+  - Tasks allowing broad home, client, or mounted-drive access are rejected.
+  - Invalid tasks produce actionable validation errors and a nonzero exit status.
+verification_commands:
+  - python3 -m unittest discover -s tests -v
+  - bash scripts/check-scaffold.sh
+required_evidence:
+  - Passing unit-test output covering valid, malformed, unapproved, incomplete, and unsafe tasks.
+  - Passing scaffold-check output.
+human_gate: true

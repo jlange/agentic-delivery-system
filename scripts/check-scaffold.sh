@@ -19,6 +19,8 @@ required=(
   ".codex/agents/code_reviewer.toml"
   "schemas/task.schema.json"
   "templates/tasks/task.yaml"
+  "scripts/validate-task.py"
+  "requirements-dev.txt"
   "docs/operating-model.md"
   "docs/manual-todo.md"
 )
@@ -29,5 +31,8 @@ done
 
 grep -q '^max_threads = 4$' .codex/config.toml
 grep -q '^max_depth = 1$' .codex/config.toml
+
+python3 scripts/validate-task.py tasks/ADS-001-validate-task-files.yaml
+python3 -m unittest discover -s tests
 
 echo "Scaffold check passed."

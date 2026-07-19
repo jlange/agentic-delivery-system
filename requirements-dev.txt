@@ -1,0 +1,3 @@
+# Task validation tooling; not required by generated client products.
+jsonschema>=4.18,<5
+PyYAML>=6,<7
