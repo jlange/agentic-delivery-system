@@ -1,6 +1,6 @@
 # Agentic Delivery System
 
-A supervised software-delivery framework for contract websites and web applications.
+A supervised software-delivery framework for contract websites, web applications, internal tools, automation projects, and self-owned software products.
 
 The system is designed to:
 
@@ -55,4 +55,4 @@ Agents must not:
 
 ## Status
 
-This repository is currently being scaffolded. No production client work should use it until the supervised pilot has completed successfully.
+This repository is in supervised pilot use. It has been used for an initial client-style intake, demo project, pull request, and independent review workflow. Production client work still requires human review, explicit approval gates, and project-specific safeguards.
