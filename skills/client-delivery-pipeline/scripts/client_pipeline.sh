@@ -12,6 +12,7 @@ Usage:
   client_pipeline.sh copy-source [--agent-safe] <client> <file> [file...]
   client_pipeline.sh write-intake-prompt <client>
   client_pipeline.sh write-review-checklist <client>
+  client_pipeline.sh write-architecture-prompt <client>
   client_pipeline.sh init-demo-repo <client> <repo-name>
   client_pipeline.sh write-demo-task <client> <repo-name>
   client_pipeline.sh write-demo-agent-prompts <client> <repo-name>
@@ -42,6 +43,90 @@ demo_repo_dir() {
   local client="$1"
   local repo="$2"
   echo "$CLIENTS_ROOT/$client/$repo"
+}
+
+architecture_output() {
+  local client="$1"
+  echo "$(intake_dir "$client")/outputs/architecture_recommendation.md"
+}
+
+architecture_review() {
+  local client="$1"
+  echo "$(intake_dir "$client")/decisions/architecture_review_checklist.md"
+}
+
+review_field() {
+  local checklist="$1"
+  local field="$2"
+  sed -n "s/^${field}:[[:space:]]*//p" "$checklist" | head -n 1
+}
+
+require_architecture_approval() {
+  local client="$1"
+  local output checklist status approved_plan authorization data_approval reviewer review_date field value heading
+  output="$(architecture_output "$client")"
+  checklist="$(architecture_review "$client")"
+
+  [[ -s "$output" ]] || die "architecture recommendation missing or empty: $output"
+  [[ -s "$checklist" ]] || die "architecture review checklist missing or empty: $checklist"
+
+  for heading in "Recommendation Status" "Data-Handling Declarations" \
+    "System and Component Boundaries" "Data Flows" "Recommended Technical Stack" \
+    "Accessibility Requirements" "Backup and Recovery Expectations" \
+    "Testing and Verification Strategy" "Requirements Traceability" "Execution Plan" \
+    "Dependency and Sequencing Notes" "Architecture Decision Records"; do
+    grep -Fqx "## $heading" "$output" || die "architecture recommendation missing section: $heading"
+  done
+  grep -Eq 'REQ-[0-9]{3}' "$output" || die "architecture traceability must include REQ-### IDs"
+  grep -Eq 'AC-[0-9]{3}' "$output" || die "architecture traceability must include AC-### IDs"
+
+  status="$(review_field "$checklist" "Architecture status")"
+  approved_plan="$(review_field "$checklist" "Approved architecture and execution plan")"
+  authorization="$(review_field "$checklist" "Authorization to proceed to project setup")"
+  data_approval="$(review_field "$checklist" "Data-handling approval")"
+  reviewer="$(review_field "$checklist" "Reviewer")"
+  review_date="$(review_field "$checklist" "Review date")"
+
+  [[ "$status" == "approved" ]] || die "architecture status must be approved"
+  [[ "$approved_plan" == "../outputs/architecture_recommendation.md" ]] || \
+    die "approved architecture and execution plan must reference ../outputs/architecture_recommendation.md"
+  [[ "$authorization" == "approved" ]] || die "project setup is not explicitly authorized"
+  [[ "$data_approval" == "approved" ]] || die "data handling must be approved"
+  [[ -n "$reviewer" && "$reviewer" != "pending" ]] || die "architecture reviewer must be identified"
+  [[ "$review_date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || die "architecture review date must use YYYY-MM-DD"
+
+  for field in "Security decision" "Privacy decision" "Accessibility decision" \
+    "Backup and recovery decision" "Hosting decision" "Paid-service decision"; do
+    value="$(review_field "$checklist" "$field")"
+    [[ -n "$value" && "$value" != "pending" ]] || die "$field must be resolved"
+  done
+
+  grep -q '^## Unresolved Blockers$' "$checklist" || die "architecture checklist must record unresolved blockers"
+  grep -A1 '^## Unresolved Blockers$' "$checklist" | tail -n 1 | grep -qx 'None\.' || \
+    die "unresolved architecture blockers prevent project setup"
+  grep -q '^## Rejected Or Deferred Alternatives$' "$checklist" || \
+    die "architecture checklist must record rejected or deferred alternatives"
+}
+
+require_intake_approval() {
+  local client="$1"
+  local output checklist status field value
+  output="$(intake_dir "$client")/outputs/contract_intake_output.md"
+  checklist="$(intake_dir "$client")/decisions/intake_review_checklist.md"
+
+  [[ -s "$output" ]] || die "contract intake output missing or empty"
+  [[ -s "$checklist" ]] || die "intake review checklist missing or empty"
+  status="$(review_field "$checklist" "Intake status")"
+  [[ "$status" == "approved" ]] || die "intake status must be approved before architecture"
+
+  for field in "Allowed paths" "Forbidden paths" "Raw source review" \
+    "Redaction requirement" "External AI client-data use"; do
+    value="$(review_field "$checklist" "$field")"
+    [[ -n "$value" && "$value" != "pending" ]] || die "$field must be explicitly resolved"
+  done
+
+  grep -Eq 'REQ-[0-9]{3}' "$output" || die "approved intake must contain stable REQ-### IDs"
+  grep -Eq 'AC-[0-9]{3}' "$output" || die "approved intake must contain stable AC-### IDs"
 }
 
 cmd_init_intake() {
@@ -173,6 +258,17 @@ Review source:
 
 - \`../outputs/contract_intake_output.md\`
 
+Intake status: draft
+Allowed paths: pending
+Forbidden paths: pending
+Raw source review: pending
+Redaction requirement: pending
+External AI client-data use: pending
+
+Change \`Intake status\` to \`approved\` only after scope, stable \`REQ-###\` and
+\`AC-###\` IDs, and all data-handling declarations are resolved. Use explicit paths
+and decisions rather than \`pending\`.
+
 ## Scope decision
 
 - [ ] Initial scope is clear enough to describe in one paragraph.
@@ -229,9 +325,46 @@ Review source:
 
 Add review notes here.
 EOF
-EOF
 
   echo "Wrote $root/decisions/intake_review_checklist.md"
+}
+
+cmd_write_architecture_prompt() {
+  local client="${1:-}"
+  [[ -n "$client" ]] || die "missing client"
+  require_lowercase_name "$client"
+
+  local root
+  root="$(intake_dir "$client")"
+  require_intake_approval "$client"
+
+  cat > "$root/notes/architecture_recommendation_prompt.md" <<EOF
+# Architecture Recommendation Request
+
+Use the \`architecture-recommendation\` skill from:
+
+\`$SYSTEM_ROOT/skills/architecture-recommendation/SKILL.md\`
+
+Review only the paths approved in:
+
+\`$root/decisions/intake_review_checklist.md\`
+
+Required inputs:
+
+- \`$root/outputs/contract_intake_output.md\`
+- \`$root/decisions/intake_review_checklist.md\`
+
+Allowed write paths:
+
+- \`$root/outputs/architecture_recommendation.md\`
+- \`$root/decisions/architecture_review_checklist.md\`
+
+Do not create a repository, scaffold a project, decompose tasks, or implement code.
+Do not approve the architecture. Stop without a final recommendation if a blocking
+requirement remains unresolved.
+EOF
+
+  echo "Wrote $root/notes/architecture_recommendation_prompt.md"
 }
 
 cmd_init_demo_repo() {
@@ -240,6 +373,8 @@ cmd_init_demo_repo() {
   [[ -n "$client" && -n "$repo" ]] || die "usage: init-demo-repo <client> <repo-name>"
   require_lowercase_name "$client"
   require_lowercase_name "$repo"
+
+  require_architecture_approval "$client"
 
   local root
   root="$(demo_repo_dir "$client" "$repo")"
@@ -535,6 +670,7 @@ main() {
     copy-source) cmd_copy_source "$@" ;;
     write-intake-prompt) cmd_write_intake_prompt "$@" ;;
     write-review-checklist) cmd_write_review_checklist "$@" ;;
+    write-architecture-prompt) cmd_write_architecture_prompt "$@" ;;
     init-demo-repo) cmd_init_demo_repo "$@" ;;
     write-demo-task) cmd_write_demo_task "$@" ;;
     write-demo-agent-prompts) cmd_write_demo_agent_prompts "$@" ;;

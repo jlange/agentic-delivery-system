@@ -23,6 +23,9 @@ required=(
   "requirements-dev.txt"
   "docs/operating-model.md"
   "docs/manual-todo.md"
+  "docs/learnings/architecture-approval-gates.md"
+  "skills/architecture-recommendation/SKILL.md"
+  "skills/client-delivery-pipeline/scripts/client_pipeline.sh"
 )
 
 for path in "${required[@]}"; do

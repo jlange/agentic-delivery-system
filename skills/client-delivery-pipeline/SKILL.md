@@ -25,6 +25,7 @@ Preserve these gates:
 - Human selects which files enter intake.
 - Human decides whether raw source files are safe for agent review.
 - Human approves scope before architecture or implementation.
+- Human approves the architecture and execution plan before project initialization.
 - Human approves real data access.
 - Human approves GitHub repo creation, PR creation, merge, and deployment.
 - Agents must not inspect broad local paths such as `/mnt/c`, `/mnt/d`, `/mnt/e`, `$HOME`, `.ssh`, `.config`, `.codex`, or `.claude`.
@@ -109,9 +110,40 @@ If Codex cannot write, capture its Markdown output and save it manually to:
 
 Human review is required before treating anything as approved scope.
 
-### 5. Initialize Demo Repo
+### 5. Produce Architecture Recommendation
 
-After scope is approved enough to start a demo:
+After the intake checklist records approved scope and data-handling declarations:
+
+```bash
+<skill-dir>/scripts/client_pipeline.sh write-architecture-prompt <client>
+```
+
+Run the solution architect from the client intake directory. It may write only:
+
+- `intake/outputs/architecture_recommendation.md`
+- `intake/decisions/architecture_review_checklist.md`
+
+The recommendation must follow the `architecture-recommendation` skill. A human must
+review it and complete the checklist. The architect must not approve its own work.
+
+### 6. Approve Architecture And Execution Plan
+
+Project initialization requires all of the following in
+`intake/decisions/architecture_review_checklist.md`:
+
+- `Architecture status: approved`
+- `Data-handling approval: approved`
+- resolved security, privacy, accessibility, backup/recovery, hosting, and paid-service decisions
+- `Authorization to proceed to project setup: approved`
+- a named reviewer and ISO `YYYY-MM-DD` review date
+- `None.` immediately below `## Unresolved Blockers`
+
+The checklist must also preserve the approved plan reference and rejected or deferred
+alternatives. Missing, draft, pending, or blocked evidence fails closed.
+
+### 7. Initialize Demo Repo
+
+After the architecture and execution plan are explicitly approved:
 
 ```bash
 <skill-dir>/scripts/client_pipeline.sh init-demo-repo <client> <repo-name>
@@ -125,7 +157,7 @@ This creates a local Git repo scaffold under:
 
 Push to GitHub only with explicit human approval.
 
-### 6. Create Demo Task
+### 8. Create Demo Task
 
 ```bash
 <skill-dir>/scripts/client_pipeline.sh write-demo-task <client> <repo-name>
@@ -133,7 +165,7 @@ Push to GitHub only with explicit human approval.
 
 The first task is `DEMO-001-generate-synthetic-workbooks.md`.
 
-### 7. Create Local Agent Prompts
+### 9. Create Local Agent Prompts
 
 ```bash
 <skill-dir>/scripts/client_pipeline.sh write-demo-agent-prompts <client> <repo-name>
@@ -141,7 +173,7 @@ The first task is `DEMO-001-generate-synthetic-workbooks.md`.
 
 Prompts are written to `prompts-local/` and added to `.git/info/exclude` so they stay local by default. This avoids repeating the out-of-scope `prompts/` issue encountered during the FundLTC demo PR.
 
-### 8. Implementation And Review Pattern
+### 10. Implementation And Review Pattern
 
 Use task branches:
 
