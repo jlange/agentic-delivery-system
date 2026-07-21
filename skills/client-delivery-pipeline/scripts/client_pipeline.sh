@@ -13,6 +13,7 @@ Usage:
   client_pipeline.sh write-intake-prompt <client>
   client_pipeline.sh write-review-checklist <client>
   client_pipeline.sh write-architecture-prompt <client>
+  client_pipeline.sh validate-architecture-gate <client>
   client_pipeline.sh init-demo-repo <client> <repo-name>
   client_pipeline.sh write-demo-task <client> <repo-name>
   client_pipeline.sh write-demo-agent-prompts <client> <repo-name>
@@ -61,35 +62,79 @@ review_field() {
   sed -n "s/^${field}:[[:space:]]*//p" "$checklist" | head -n 1
 }
 
+markdown_section() {
+  local document="$1"
+  local heading="$2"
+  awk -v heading="## $heading" '
+    $0 == heading { in_section = 1; next }
+    in_section && /^## / { exit }
+    in_section { print }
+  ' "$document"
+}
+
+extract_requirement_ids() {
+  grep -Eo '(REQ|AC)-[0-9]{3}' | sort -u || true
+}
+
 require_architecture_approval() {
   local client="$1"
-  local output checklist status approved_plan authorization data_approval reviewer review_date field value heading
+  local intake output checklist authoring_section authoring_status status_count
+  local review_status approved_plan approved_digest actual_digest authorization
+  local data_approval reviewer review_date field value heading heading_count
+  local traceability_section missing_ids
+  intake="$(intake_dir "$client")/outputs/contract_intake_output.md"
   output="$(architecture_output "$client")"
   checklist="$(architecture_review "$client")"
 
+  [[ -s "$intake" ]] || die "contract intake output missing or empty"
   [[ -s "$output" ]] || die "architecture recommendation missing or empty: $output"
   [[ -s "$checklist" ]] || die "architecture review checklist missing or empty: $checklist"
 
-  for heading in "Recommendation Status" "Data-Handling Declarations" \
+  for heading in "Authoring State" "Data-Handling Declarations" \
     "System and Component Boundaries" "Data Flows" "Recommended Technical Stack" \
     "Accessibility Requirements" "Backup and Recovery Expectations" \
     "Testing and Verification Strategy" "Requirements Traceability" "Execution Plan" \
     "Dependency and Sequencing Notes" "Architecture Decision Records"; do
-    grep -Fqx "## $heading" "$output" || die "architecture recommendation missing section: $heading"
+    heading_count="$(grep -Fxc "## $heading" "$output" || true)"
+    [[ "$heading_count" -eq 1 ]] || \
+      die "architecture recommendation must contain exactly one section: $heading"
   done
-  grep -Eq 'REQ-[0-9]{3}' "$output" || die "architecture traceability must include REQ-### IDs"
-  grep -Eq 'AC-[0-9]{3}' "$output" || die "architecture traceability must include AC-### IDs"
 
-  status="$(review_field "$checklist" "Architecture status")"
-  approved_plan="$(review_field "$checklist" "Approved architecture and execution plan")"
+  authoring_section="$(markdown_section "$output" "Authoring State")"
+  status_count="$(printf '%s\n' "$authoring_section" | grep -Ec '^Authoring status:' || true)"
+  [[ "$status_count" -eq 1 ]] || \
+    die "architecture recommendation must declare exactly one Authoring status: draft or blocked"
+  authoring_status="$(printf '%s\n' "$authoring_section" | sed -n 's/^Authoring status:[[:space:]]*//p')"
+  [[ "$authoring_status" == "draft" || "$authoring_status" == "blocked" ]] || \
+    die "architecture recommendation Authoring status must be draft or blocked"
+  [[ "$authoring_status" == "draft" ]] || \
+    die "architecture recommendation authoring status is blocked"
+
+  traceability_section="$(markdown_section "$output" "Requirements Traceability")"
+  missing_ids="$(
+    comm -23 \
+      <(extract_requirement_ids < "$intake") \
+      <(printf '%s\n' "$traceability_section" | extract_requirement_ids)
+  )"
+  [[ -z "$missing_ids" ]] || \
+    die "architecture Requirements Traceability section is missing approved IDs: $(printf '%s' "$missing_ids" | tr '\n' ' ')"
+
+  review_status="$(review_field "$checklist" "Architecture review status")"
+  approved_plan="$(review_field "$checklist" "Approved recommendation artifact")"
+  approved_digest="$(review_field "$checklist" "Approved recommendation SHA-256")"
   authorization="$(review_field "$checklist" "Authorization to proceed to project setup")"
   data_approval="$(review_field "$checklist" "Data-handling approval")"
   reviewer="$(review_field "$checklist" "Reviewer")"
   review_date="$(review_field "$checklist" "Review date")"
 
-  [[ "$status" == "approved" ]] || die "architecture status must be approved"
+  [[ "$review_status" == "approved" ]] || die "architecture review status must be approved"
   [[ "$approved_plan" == "../outputs/architecture_recommendation.md" ]] || \
-    die "approved architecture and execution plan must reference ../outputs/architecture_recommendation.md"
+    die "approved recommendation artifact must reference ../outputs/architecture_recommendation.md"
+  [[ "$approved_digest" =~ ^[0-9a-f]{64}$ ]] || \
+    die "approved recommendation SHA-256 must be a lowercase 64-character digest"
+  actual_digest="$(sha256sum "$output" | awk '{print $1}')"
+  [[ "$approved_digest" == "$actual_digest" ]] || \
+    die "approved recommendation SHA-256 does not match the current recommendation artifact"
   [[ "$authorization" == "approved" ]] || die "project setup is not explicitly authorized"
   [[ "$data_approval" == "approved" ]] || die "data handling must be approved"
   [[ -n "$reviewer" && "$reviewer" != "pending" ]] || die "architecture reviewer must be identified"
@@ -365,6 +410,15 @@ requirement remains unresolved.
 EOF
 
   echo "Wrote $root/notes/architecture_recommendation_prompt.md"
+}
+
+cmd_validate_architecture_gate() {
+  local client="${1:-}"
+  [[ -n "$client" ]] || die "missing client"
+  require_lowercase_name "$client"
+
+  require_architecture_approval "$client"
+  echo "Architecture gate approved for $client"
 }
 
 cmd_init_demo_repo() {
@@ -671,6 +725,7 @@ main() {
     write-intake-prompt) cmd_write_intake_prompt "$@" ;;
     write-review-checklist) cmd_write_review_checklist "$@" ;;
     write-architecture-prompt) cmd_write_architecture_prompt "$@" ;;
+    validate-architecture-gate) cmd_validate_architecture_gate "$@" ;;
     init-demo-repo) cmd_init_demo_repo "$@" ;;
     write-demo-task) cmd_write_demo_task "$@" ;;
     write-demo-agent-prompts) cmd_write_demo_agent_prompts "$@" ;;

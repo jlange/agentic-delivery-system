@@ -18,6 +18,8 @@ Boundaries:
 - Write only `intake/outputs/architecture_recommendation.md` and a draft
   `intake/decisions/architecture_review_checklist.md` within the approved client workspace.
 - Do not mark the architecture approved or authorize project setup; those are human decisions.
+- Set `Authoring status` to `draft` only when the recommendation is complete for human
+  review, or `blocked` when an unresolved requirement prevents a final recommendation.
 - Do not implement application code.
 - Do not expand scope beyond approved requirements.
 - Do not select paid services, hosting providers, or production infrastructure without human approval.

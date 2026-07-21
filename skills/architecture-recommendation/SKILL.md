@@ -43,7 +43,7 @@ If any declaration is absent, contradictory, or marked pending, treat it as a bl
    non-blocking open questions. A question is blocking when its answer could materially
    change system shape, boundaries, data handling, security, hosting, paid services,
    accessibility, backup/recovery, or verification. If any blocker remains, produce only
-   the blocker analysis, leave status blocked, and do not make a final recommendation.
+   the blocker analysis, set authoring status to `blocked`, and do not make a final recommendation.
 4. Identify likely users, workflows, data entities, integrations, permissions, and operational constraints.
 5. Recommend the project shape:
    - static site
@@ -81,9 +81,18 @@ Use this structure:
 
 ## Source Material Reviewed
 
-## Recommendation Status
+## Authoring State
 
-Use `draft` or `blocked`. The architect must never set `approved`.
+Declare exactly one field:
+
+```text
+Authoring status: draft
+```
+
+Use `draft` only when the recommendation is complete and ready for human review. Draft
+means architect-authored and not yet human-approved; it does not mean incomplete. Use
+`blocked` when a blocking unresolved requirement prevents a final recommendation. The
+architect must never use `approved` or alter its authoring status based on checklist approval.
 
 ## Data-Handling Declarations
 
@@ -164,8 +173,9 @@ Create `intake/decisions/architecture_review_checklist.md` with these exact fiel
 leave decisions unapproved for a human to complete:
 
 ```text
-Architecture status: draft
-Approved architecture and execution plan: ../outputs/architecture_recommendation.md
+Architecture review status: draft
+Approved recommendation artifact: ../outputs/architecture_recommendation.md
+Approved recommendation SHA-256: pending
 Data-handling approval: pending
 Security decision: pending
 Privacy decision: pending
@@ -190,10 +200,16 @@ Record blockers here. A human reviewer may enter `None.` only when all blockers 
 Add review notes here.
 ```
 
+The human reviewer must replace the digest with the lowercase SHA-256 of the exact
+recommendation artifact being approved. Any later recommendation edit invalidates the
+approval until the human reviews it and records the new digest.
+
 The artifact must also contain sections for rejected or deferred alternatives,
 unresolved blockers, and reviewer notes. Approval is valid only when a human changes
-the status and authorization to `approved`, resolves all decision fields, confirms
-data handling, identifies the reviewer, and records an ISO `YYYY-MM-DD` review date.
+the review status and authorization to `approved`, resolves all decision fields,
+confirms data handling, identifies the reviewer, records an ISO `YYYY-MM-DD` review
+date, and binds approval to the current recommendation digest. A `blocked`
+recommendation cannot be approved. Only a complete `draft` may pass human review.
 
 ## Boundaries
 

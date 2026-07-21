@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import os
 import subprocess
 import tempfile
@@ -28,7 +29,13 @@ class ArchitectureGateTests(unittest.TestCase):
         self.run_script("init-intake", "example")
         self.intake = self.clients_root / "example" / "intake"
         (self.intake / "outputs" / "contract_intake_output.md").write_text(
-            "# Contract Intake Output\n\nREQ-001: Example.\nAC-001: Observable result.\n",
+            """# Contract Intake Output
+
+REQ-001: First requirement.
+REQ-002: Second requirement.
+AC-001: First observable result.
+AC-002: Second observable result.
+""",
             encoding="utf-8",
         )
         (self.intake / "decisions" / "intake_review_checklist.md").write_text(
@@ -53,12 +60,21 @@ External AI client-data use: prohibited
             check=False,
         )
 
-    def write_architecture_artifacts(self, *, approved: bool) -> None:
-        (self.intake / "outputs" / "architecture_recommendation.md").write_text(
-            """# Architecture Recommendation
+    def write_architecture_artifacts(
+        self,
+        *,
+        authoring_status: str | None = "draft",
+        review_status: str = "approved",
+        authorization: str = "approved",
+        traceability: str = "REQ-001 REQ-002 AC-001 AC-002.",
+    ) -> None:
+        status_line = (
+            f"Authoring status: {authoring_status}" if authoring_status is not None else ""
+        )
+        recommendation = f"""# Architecture Recommendation
 
-## Recommendation Status
-draft
+## Authoring State
+{status_line}
 ## Data-Handling Declarations
 Approved declarations.
 ## System and Component Boundaries
@@ -68,31 +84,31 @@ Input to output.
 ## Recommended Technical Stack
 Default stack.
 ## Accessibility Requirements
-REQ-001 applies.
+REQ-001 and REQ-002 apply.
 ## Backup and Recovery Expectations
 Documented.
 ## Testing and Verification Strategy
-AC-001 is verified.
+AC-001 and AC-002 are verified.
 ## Requirements Traceability
-REQ-001 and AC-001.
+{traceability}
 ## Execution Plan
 One phase.
 ## Dependency and Sequencing Notes
 None.
 ## Architecture Decision Records
 ADR-001.
-""",
-            encoding="utf-8",
-        )
-        status = "approved" if approved else "draft"
-        authorization = "approved" if approved else "pending"
-        decisions = "approved" if approved else "pending"
-        blockers = "None." if approved else "REQ-002 needs a hosting decision."
+"""
+        output = self.intake / "outputs" / "architecture_recommendation.md"
+        output.write_text(recommendation, encoding="utf-8")
+        digest = hashlib.sha256(recommendation.encode()).hexdigest()
+        decisions = "approved" if review_status == "approved" else "pending"
+        blockers = "None." if review_status == "approved" else "REQ-002 needs a decision."
         (self.intake / "decisions" / "architecture_review_checklist.md").write_text(
             f"""# Architecture Review Checklist
 
-Architecture status: {status}
-Approved architecture and execution plan: ../outputs/architecture_recommendation.md
+Architecture review status: {review_status}
+Approved recommendation artifact: ../outputs/architecture_recommendation.md
+Approved recommendation SHA-256: {digest}
 Data-handling approval: {decisions}
 Security decision: {decisions}
 Privacy decision: {decisions}
@@ -139,12 +155,12 @@ None.
         self.assertIn("External AI client-data use: pending", checklist_text)
 
     def test_init_demo_repo_rejects_incomplete_architecture(self) -> None:
-        self.write_architecture_artifacts(approved=True)
+        self.write_architecture_artifacts()
         output = self.intake / "outputs" / "architecture_recommendation.md"
         output.write_text("# Architecture Recommendation\n", encoding="utf-8")
         result = self.run_script("init-demo-repo", "example", "demo")
         self.assertNotEqual(0, result.returncode)
-        self.assertIn("missing section", result.stderr)
+        self.assertIn("exactly one section", result.stderr)
 
     def test_init_demo_repo_rejects_missing_architecture_evidence(self) -> None:
         result = self.run_script("init-demo-repo", "example", "demo")
@@ -152,15 +168,105 @@ None.
         self.assertIn("architecture recommendation missing", result.stderr)
         self.assertFalse((self.clients_root / "example" / "demo").exists())
 
-    def test_init_demo_repo_rejects_draft_architecture(self) -> None:
-        self.write_architecture_artifacts(approved=False)
+    def test_init_demo_repo_rejects_draft_checklist_approval(self) -> None:
+        self.write_architecture_artifacts(review_status="draft", authorization="pending")
         result = self.run_script("init-demo-repo", "example", "demo")
         self.assertNotEqual(0, result.returncode)
-        self.assertIn("architecture status must be approved", result.stderr)
+        self.assertIn("architecture review status must be approved", result.stderr)
         self.assertFalse((self.clients_root / "example" / "demo").exists())
 
+    def test_init_demo_repo_rejects_blocked_recommendation_with_human_approval(self) -> None:
+        self.write_architecture_artifacts(authoring_status="blocked")
+        result = self.run_script("init-demo-repo", "example", "demo")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("authoring status is blocked", result.stderr)
+
+    def test_init_demo_repo_rejects_missing_or_invalid_authoring_status(self) -> None:
+        cases = (
+            (None, "exactly one Authoring status"),
+            ("incomplete", "Authoring status must be draft or blocked"),
+        )
+        for status, expected_error in cases:
+            with self.subTest(status=status):
+                self.write_architecture_artifacts(authoring_status=status)
+                result = self.run_script("init-demo-repo", "example", "demo")
+                self.assertNotEqual(0, result.returncode)
+                self.assertIn(expected_error, result.stderr)
+
+    def test_init_demo_repo_rejects_missing_human_authorization(self) -> None:
+        self.write_architecture_artifacts(authorization="pending")
+        result = self.run_script("init-demo-repo", "example", "demo")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("project setup is not explicitly authorized", result.stderr)
+
+    def test_init_demo_repo_rejects_recommendation_changed_after_approval(self) -> None:
+        self.write_architecture_artifacts()
+        output = self.intake / "outputs" / "architecture_recommendation.md"
+        output.write_text(
+            output.read_text(encoding="utf-8") + "\nPost-review change.\n",
+            encoding="utf-8",
+        )
+        result = self.run_script("init-demo-repo", "example", "demo")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("does not match the current recommendation", result.stderr)
+
+    def test_complete_intake_traceability_is_accepted(self) -> None:
+        self.write_architecture_artifacts()
+        result = self.run_script("init-demo-repo", "example", "demo")
+        self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_validate_architecture_gate_does_not_create_project(self) -> None:
+        self.write_architecture_artifacts()
+        result = self.run_script("validate-architecture-gate", "example")
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn("Architecture gate approved for example", result.stdout)
+        self.assertEqual([], list((self.clients_root / "example").glob("*/.git")))
+
+    def test_missing_requirement_mapping_is_rejected(self) -> None:
+        self.write_architecture_artifacts(traceability="REQ-001 AC-001 AC-002.")
+        result = self.run_script("init-demo-repo", "example", "demo")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("missing approved IDs: REQ-002", result.stderr)
+
+    def test_missing_acceptance_criterion_mapping_is_rejected(self) -> None:
+        self.write_architecture_artifacts(traceability="REQ-001 REQ-002 AC-001.")
+        result = self.run_script("init-demo-repo", "example", "demo")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("AC-002", result.stderr)
+
+    def test_ids_outside_traceability_section_do_not_count(self) -> None:
+        self.write_architecture_artifacts(traceability="REQ-001 AC-001.")
+        result = self.run_script("init-demo-repo", "example", "demo")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("AC-002", result.stderr)
+        self.assertIn("REQ-002", result.stderr)
+
+    def test_duplicate_mappings_do_not_conceal_missing_id(self) -> None:
+        self.write_architecture_artifacts(
+            traceability="REQ-001 REQ-001 AC-001 AC-001 AC-002."
+        )
+        result = self.run_script("init-demo-repo", "example", "demo")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("REQ-002", result.stderr)
+
+    def test_absent_or_malformed_traceability_section_is_rejected(self) -> None:
+        for replacement in ("", "### Requirements Traceability"):
+            with self.subTest(replacement=replacement):
+                self.write_architecture_artifacts()
+                output = self.intake / "outputs" / "architecture_recommendation.md"
+                recommendation = output.read_text(encoding="utf-8")
+                recommendation = recommendation.replace(
+                    "## Requirements Traceability", replacement
+                )
+                output.write_text(recommendation, encoding="utf-8")
+                result = self.run_script("init-demo-repo", "example", "demo")
+                self.assertNotEqual(0, result.returncode)
+                self.assertIn(
+                    "exactly one section: Requirements Traceability", result.stderr
+                )
+
     def test_init_demo_repo_accepts_complete_human_approval(self) -> None:
-        self.write_architecture_artifacts(approved=True)
+        self.write_architecture_artifacts()
         result = self.run_script("init-demo-repo", "example", "demo")
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertTrue((self.clients_root / "example" / "demo" / ".git").is_dir())

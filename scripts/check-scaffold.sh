@@ -25,6 +25,7 @@ required=(
   "docs/manual-todo.md"
   "docs/learnings/architecture-approval-gates.md"
   "skills/architecture-recommendation/SKILL.md"
+  "skills/project-setup/SKILL.md"
   "skills/client-delivery-pipeline/scripts/client_pipeline.sh"
 )
 

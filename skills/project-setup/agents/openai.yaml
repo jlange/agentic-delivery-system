@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Setup"
+  short_description: "Create approved local project scaffolds"
+  default_prompt: "Use $project-setup to create a local project scaffold from an approved architecture plan."

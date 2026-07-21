@@ -125,21 +125,38 @@ Run the solution architect from the client intake directory. It may write only:
 
 The recommendation must follow the `architecture-recommendation` skill. A human must
 review it and complete the checklist. The architect must not approve its own work.
+`Authoring status: draft` means complete for review but not approved; `blocked` means
+no final recommendation exists and project initialization must remain unavailable.
 
 ### 6. Approve Architecture And Execution Plan
 
 Project initialization requires all of the following in
 `intake/decisions/architecture_review_checklist.md`:
 
-- `Architecture status: approved`
+- recommendation `Authoring status: draft`
+- `Architecture review status: approved`
+- the fixed recommendation path and its matching lowercase SHA-256 digest
 - `Data-handling approval: approved`
 - resolved security, privacy, accessibility, backup/recovery, hosting, and paid-service decisions
 - `Authorization to proceed to project setup: approved`
 - a named reviewer and ISO `YYYY-MM-DD` review date
 - `None.` immediately below `## Unresolved Blockers`
 
-The checklist must also preserve the approved plan reference and rejected or deferred
-alternatives. Missing, draft, pending, or blocked evidence fails closed.
+The checklist must also preserve rejected or deferred alternatives. Missing, pending,
+stale, or blocked evidence fails closed. The digest binds approval to the exact content
+reviewed; changing the recommendation requires renewed human approval.
+
+After completing review, the human can calculate the recorded digest with:
+
+```bash
+sha256sum intake/outputs/architecture_recommendation.md
+```
+
+Validate the gate without creating a project:
+
+```bash
+<skill-dir>/scripts/client_pipeline.sh validate-architecture-gate <client>
+```
 
 ### 7. Initialize Demo Repo
 
