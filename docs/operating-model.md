@@ -10,10 +10,11 @@ This delivery system is supervised by default. Agents may investigate, plan, imp
 4. Produce a minimal architecture and execution plan.
 5. Approve the plan before implementation begins.
 6. Split work into bounded tasks with allowed paths, forbidden paths, verification commands, and required evidence.
-7. Run implementation in isolated branches or worktrees.
-8. Run automated checks and independent review.
-9. Merge only after human approval.
-10. Record lessons and process improvements.
+7. Validate and approve the task plan before assigning implementation work.
+8. Run implementation in isolated branches or worktrees.
+9. Run automated checks and independent review.
+10. Merge only after human approval.
+11. Record lessons and process improvements.
 
 ## Human gates
 
@@ -25,3 +26,4 @@ This delivery system is supervised by default. Agents may investigate, plan, imp
 - Merges to main
 - Destructive actions
 - Budget or concurrency increases
+- Task-plan authorization before implementation

@@ -22,10 +22,15 @@ The initial workflow is supervised and repository-based:
 4. Architecture and execution planning
 5. Human approval of the plan
 6. Task decomposition
-7. Agent execution in isolated worktrees
-8. Automated testing and independent review
-9. Human merge approval
-10. Staging, acceptance, delivery, and retrospective
+7. Human approval of the task plan
+8. Agent execution in isolated worktrees
+9. Automated testing and independent review
+10. Human merge approval
+11. Staging, acceptance, delivery, and retrospective
+
+Task decomposition produces draft, dependency-aware YAML tasks with bounded paths,
+verification commands, required evidence, and explicit human gates. Draft tasks must
+pass structural plan validation and receive human approval before implementation.
 
 ## Safety boundaries
 
@@ -56,3 +61,8 @@ Agents must not:
 ## Status
 
 This repository is in supervised pilot use. It has been used for an initial client-style intake, demo project, pull request, and independent review workflow. Production client work still requires human review, explicit approval gates, and project-specific safeguards.
+
+Implemented reusable workflow skills currently cover contract intake, architecture
+recommendation, project setup, task decomposition, and the supervised client-delivery
+pipeline. Later implementation, QA-evidence, review, release, and retrospective skills
+will be added from validated project workflows.

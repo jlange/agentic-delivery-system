@@ -26,6 +26,8 @@ required=(
   "docs/learnings/architecture-approval-gates.md"
   "skills/architecture-recommendation/SKILL.md"
   "skills/project-setup/SKILL.md"
+  "skills/task-decomposition/SKILL.md"
+  "skills/task-decomposition/scripts/validate-task-plan.py"
   "skills/client-delivery-pipeline/scripts/client_pipeline.sh"
 )
 

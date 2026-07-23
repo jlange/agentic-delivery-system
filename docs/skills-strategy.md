@@ -76,10 +76,21 @@ Create these first:
 - `contract-intake`
 - `requirements-extraction`
 - `architecture-decision`
-- `task-breakdown`
+- `task-decomposition`
 - `pull-request-review`
 - `qa-evidence`
 - `security-review`
 - `retrospective`
 
 Do not create all skills at once. Add them when the workflow is clear enough to encode.
+
+## Implemented workflow skills
+
+- `contract-intake`
+- `architecture-recommendation`
+- `project-setup`
+- `task-decomposition`
+
+`task-decomposition` is the required boundary between an approved project scaffold and
+implementation. It produces draft task files and a human review gate; it does not
+approve or execute tasks.

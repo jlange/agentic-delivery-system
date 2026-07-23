@@ -1,0 +1,4 @@
+interface:
+  display_name: "Task Decomposition"
+  short_description: "Create bounded dependency-aware task plans"
+  default_prompt: "Use $task-decomposition to turn an approved architecture and completed project setup into reviewable implementation tasks."
