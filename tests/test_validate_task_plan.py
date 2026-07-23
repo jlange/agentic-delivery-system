@@ -41,14 +41,24 @@ class ValidateTaskPlanTests(unittest.TestCase):
             "human_gate": False,
         }
 
-    def validate(self, tasks: list[dict], approved: set[str] | None = None) -> list[str]:
+    def validate(
+        self,
+        tasks: list[dict],
+        approved: set[str] | None = None,
+        deferrals: dict | None = None,
+    ) -> list[str]:
         with tempfile.TemporaryDirectory() as directory:
             paths = []
             for index, task in enumerate(tasks):
                 path = Path(directory) / f"task-{index}.yaml"
                 path.write_text(yaml.safe_dump(task, sort_keys=False), encoding="utf-8")
                 paths.append(path)
-            return VALIDATOR.validate_plan(paths, self.schema, approved or {"REQ-001", "AC-001"})
+            return VALIDATOR.validate_plan(
+                paths,
+                self.schema,
+                approved or {"REQ-001", "AC-001"},
+                deferrals,
+            )
 
     def test_valid_draft_plan_is_accepted(self) -> None:
         self.assertEqual([], self.validate([self.task()]))
@@ -78,6 +88,119 @@ class ValidateTaskPlanTests(unittest.TestCase):
         task = self.task()
         task["status"] = "approved"
         self.assertTrue(any("status must be draft" in error for error in self.validate([task])))
+
+    def test_partial_plan_accepts_explained_deferral(self) -> None:
+        deferrals = {
+            "scope": "partial",
+            "authorization": {
+                "artifact": "intake/decisions/task_decomposition_scope_approval.md",
+                "approved_by": "Project Owner",
+                "approval_date": "2026-07-22",
+            },
+            "deferred": {
+                "REQ-002": {
+                    "gate_type": "task-scoped",
+                    "reason": "Patient-field policy remains pending.",
+                    "reentry_condition": "Approved patient-field matrix.",
+                },
+                "AC-002": {
+                    "gate_type": "task-scoped",
+                    "reason": "Acceptance depends on the deferred patient fields.",
+                    "reentry_condition": "Approved patient-field matrix.",
+                },
+            },
+        }
+        errors = self.validate(
+            [self.task()],
+            approved={"REQ-001", "AC-001", "REQ-002", "AC-002"},
+            deferrals=deferrals,
+        )
+        self.assertEqual([], errors)
+
+    def test_partial_plan_rejects_unexplained_or_overlapping_deferral(self) -> None:
+        incomplete = {
+            "scope": "partial",
+            "authorization": {
+                "artifact": "intake/decisions/task_decomposition_scope_approval.md",
+                "approved_by": "Project Owner",
+                "approval_date": "2026-07-22",
+            },
+            "deferred": {
+                "REQ-002": {
+                    "gate_type": "task-scoped",
+                    "reason": "",
+                    "reentry_condition": "",
+                }
+            },
+        }
+        errors = self.validate(
+            [self.task()],
+            approved={"REQ-001", "AC-001", "REQ-002"},
+            deferrals=incomplete,
+        )
+        self.assertTrue(any("non-empty text is required" in error for error in errors))
+
+        overlap = {
+            "scope": "partial",
+            "authorization": {
+                "artifact": "intake/decisions/task_decomposition_scope_approval.md",
+                "approved_by": "Project Owner",
+                "approval_date": "2026-07-22",
+            },
+            "deferred": {
+                "REQ-001": {
+                    "gate_type": "task-scoped",
+                    "reason": "Incorrect overlap.",
+                    "reentry_condition": "Not applicable.",
+                }
+            },
+        }
+        errors = self.validate([self.task()], deferrals=overlap)
+        self.assertTrue(any("both covered and deferred" in error for error in errors))
+
+    def test_partial_plan_rejects_unapproved_deferred_id(self) -> None:
+        deferrals = {
+            "scope": "partial",
+            "authorization": {
+                "artifact": "intake/decisions/task_decomposition_scope_approval.md",
+                "approved_by": "Project Owner",
+                "approval_date": "2026-07-22",
+            },
+            "deferred": {
+                "REQ-999": {
+                    "gate_type": "production-only",
+                    "reason": "Unknown scope.",
+                    "reentry_condition": "Approval required.",
+                }
+            },
+        }
+        errors = self.validate([self.task()], deferrals=deferrals)
+        self.assertTrue(any("ID is not approved" in error for error in errors))
+
+    def test_partial_plan_rejects_invalid_authorization_or_gate_type(self) -> None:
+        deferrals = {
+            "scope": "partial",
+            "authorization": {
+                "artifact": "",
+                "approved_by": "Project Owner",
+                "approval_date": "July 22",
+            },
+            "deferred": {
+                "REQ-002": {
+                    "gate_type": "global",
+                    "reason": "Invalid global deferral.",
+                    "reentry_condition": "Resolve before planning.",
+                }
+            },
+        }
+        errors = self.validate(
+            [self.task()],
+            approved={"REQ-001", "AC-001", "REQ-002"},
+            deferrals=deferrals,
+        )
+        self.assertTrue(any("authorization.artifact" in error for error in errors))
+        self.assertTrue(any("ISO YYYY-MM-DD" in error for error in errors))
+        self.assertTrue(any("must be task-scoped or production-only" in error for error in errors))
 
 
 if __name__ == "__main__":

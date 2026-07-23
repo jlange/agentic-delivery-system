@@ -31,6 +31,8 @@ The initial workflow is supervised and repository-based:
 Task decomposition produces draft, dependency-aware YAML tasks with bounded paths,
 verification commands, required evidence, and explicit human gates. Draft tasks must
 pass structural plan validation and receive human approval before implementation.
+When a decision blocks only later work, a human may authorize a bounded partial plan;
+every omitted requirement must be recorded with a reason and re-entry condition.
 
 ## Safety boundaries
 

@@ -1,4 +1,4 @@
 interface:
   display_name: "Task Decomposition"
-  short_description: "Create bounded dependency-aware task plans"
-  default_prompt: "Use $task-decomposition to turn an approved architecture and completed project setup into reviewable implementation tasks."
+  short_description: "Create bounded full or partial task plans"
+  default_prompt: "Use $task-decomposition to turn an approved architecture and completed setup into a reviewable full or safely deferred partial task plan."

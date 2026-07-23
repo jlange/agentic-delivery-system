@@ -15,6 +15,7 @@ import yaml
 
 
 ID_PATTERN = re.compile(r"\b(?:REQ|AC)-\d{3}\b")
+DATE_PATTERN = re.compile(r"\d{4}-\d{2}-\d{2}")
 FORBIDDEN_ALLOWED_PATHS = {"/", "/home", "/mnt", "/mnt/c", "/mnt/d", "/mnt/e", "~", "~/", "clients", "clients/**"}
 
 
@@ -66,7 +67,59 @@ def find_cycle(dependencies: dict[str, list[str]]) -> list[str] | None:
     return None
 
 
-def validate_plan(task_paths: list[Path], schema: dict[str, Any], approved_ids: set[str]) -> list[str]:
+def validate_deferrals(deferrals: Any, approved_ids: set[str]) -> tuple[set[str], list[str]]:
+    errors: list[str] = []
+    if not isinstance(deferrals, dict):
+        return set(), ["deferrals: document must be a mapping"]
+    if deferrals.get("scope") != "partial":
+        errors.append("deferrals.scope: must be partial")
+    authorization = deferrals.get("authorization")
+    if not isinstance(authorization, dict):
+        errors.append("deferrals.authorization: approval evidence must be a mapping")
+    else:
+        for field in ("artifact", "approved_by"):
+            value = authorization.get(field)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(f"deferrals.authorization.{field}: non-empty text is required")
+        approval_date = authorization.get("approval_date")
+        if not isinstance(approval_date, str) or not DATE_PATTERN.fullmatch(approval_date):
+            errors.append(
+                "deferrals.authorization.approval_date: ISO YYYY-MM-DD date is required"
+            )
+    entries = deferrals.get("deferred")
+    if not isinstance(entries, dict) or not entries:
+        errors.append("deferrals.deferred: at least one deferred ID is required")
+        return set(), errors
+
+    deferred_ids: set[str] = set()
+    for item_id, entry in entries.items():
+        if not isinstance(item_id, str) or not ID_PATTERN.fullmatch(item_id):
+            errors.append(f"deferrals.deferred: invalid approved ID {item_id!r}")
+            continue
+        deferred_ids.add(item_id)
+        if item_id not in approved_ids:
+            errors.append(f"deferrals.deferred.{item_id}: ID is not approved")
+        if not isinstance(entry, dict):
+            errors.append(f"deferrals.deferred.{item_id}: entry must be a mapping")
+            continue
+        if entry.get("gate_type") not in {"task-scoped", "production-only"}:
+            errors.append(
+                f"deferrals.deferred.{item_id}.gate_type: "
+                "must be task-scoped or production-only"
+            )
+        for field in ("reason", "reentry_condition"):
+            value = entry.get(field)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(f"deferrals.deferred.{item_id}.{field}: non-empty text is required")
+    return deferred_ids, errors
+
+
+def validate_plan(
+    task_paths: list[Path],
+    schema: dict[str, Any],
+    approved_ids: set[str],
+    deferrals: Any | None = None,
+) -> list[str]:
     errors: list[str] = []
     tasks: dict[str, dict[str, Any]] = {}
     covered_ids: set[str] = set()
@@ -106,7 +159,15 @@ def validate_plan(task_paths: list[Path], schema: dict[str, Any], approved_ids: 
     if cycle:
         errors.append(f"dependency cycle: {' -> '.join(cycle)}")
 
-    missing = sorted(approved_ids - covered_ids)
+    deferred_ids: set[str] = set()
+    if deferrals is not None:
+        deferred_ids, deferral_errors = validate_deferrals(deferrals, approved_ids)
+        errors.extend(deferral_errors)
+    overlap = sorted(covered_ids & deferred_ids)
+    if overlap:
+        errors.append(f"approved IDs cannot be both covered and deferred: {', '.join(overlap)}")
+
+    missing = sorted(approved_ids - covered_ids - deferred_ids)
     unexpected = sorted(covered_ids - approved_ids)
     if missing:
         errors.append(f"approved IDs without task coverage: {', '.join(missing)}")
@@ -120,12 +181,14 @@ def main() -> int:
     parser.add_argument("--schema", required=True, type=Path)
     parser.add_argument("--requirements", required=True, type=Path)
     parser.add_argument("--tasks", required=True, type=Path)
+    parser.add_argument("--deferrals", type=Path)
     args = parser.parse_args()
 
     try:
         schema = json.loads(args.schema.read_text(encoding="utf-8"))
         approved_ids = set(ID_PATTERN.findall(args.requirements.read_text(encoding="utf-8")))
-    except (OSError, json.JSONDecodeError) as error:
+        deferrals = load_task(args.deferrals) if args.deferrals else None
+    except (OSError, json.JSONDecodeError, yaml.YAMLError) as error:
         print(f"plan validation failed: {error}", file=sys.stderr)
         return 2
     if not approved_ids:
@@ -136,13 +199,17 @@ def main() -> int:
         print("plan validation failed: task directory contains no YAML tasks", file=sys.stderr)
         return 2
 
-    errors = validate_plan(task_paths, schema, approved_ids)
+    errors = validate_plan(task_paths, schema, approved_ids, deferrals)
     if errors:
         print("task plan validation failed", file=sys.stderr)
         for error in errors:
             print(f"- {error}", file=sys.stderr)
         return 1
-    print(f"Draft task plan is structurally valid: {len(task_paths)} tasks cover {len(approved_ids)} approved IDs")
+    scope = "partial" if deferrals is not None else "full"
+    print(
+        f"Draft {scope} task plan is structurally valid: "
+        f"{len(task_paths)} tasks account for {len(approved_ids)} approved IDs"
+    )
     return 0
 
 

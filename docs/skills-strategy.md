@@ -93,4 +93,6 @@ Do not create all skills at once. Add them when the workflow is clear enough to 
 
 `task-decomposition` is the required boundary between an approved project scaffold and
 implementation. It produces draft task files and a human review gate; it does not
-approve or execute tasks.
+approve or execute tasks. It may produce a human-authorized partial plan when all
+omitted requirements and acceptance criteria have explicit reasons and re-entry
+conditions; unresolved work is never silently dropped.
