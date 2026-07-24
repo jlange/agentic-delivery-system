@@ -52,13 +52,26 @@ Do not infer a decision from directory existence or an architecture suggestion.
 5. Create the smallest scaffold required by the approved project shape. Include only
    agreed configuration, documentation, source/test directories, and ignore rules. Do
    not add placeholder product behavior or speculative services.
-6. Do not copy intake or architecture artifacts into the new repository unless the
+6. Create a repository-root `AGENTS.md` containing the approved project guidance:
+   - task and branch rules
+   - verification commands that are available in the initial scaffold
+   - generated or protected paths known at setup time
+   - data, secret, production, merge, and deployment boundaries
+   - how human approvals and independent review are recorded
+
+   Keep it project-specific and concise. Do not copy the delivery system's `AGENTS.md`
+   verbatim or claim commands are runnable before their dependencies exist.
+7. Record environment prerequisites by category: repository dependencies, generated
+   tool artifacts, operating-system libraries, services or credentials, and interactive
+   privileges. Approval in one category does not authorize another. Do not install or
+   provision them during setup.
+8. Do not copy intake or architecture artifacts into the new repository unless the
    human explicitly approves those exact artifacts for source control. Never copy raw
    sources, secrets, credentials, `.env` contents, or unnecessary client data.
-7. Do not install dependencies or create accounts. Add dependency declarations only
+9. Do not install dependencies or create accounts. Add dependency declarations only
    when the architecture approves them and record the reason. If installation or a
    generated lockfile is required, stop for explicit approval.
-8. When local Git initialization and the initial scaffold commit are approved:
+10. When local Git initialization and the initial scaffold commit are approved:
    - initialize `main`
    - commit only the reviewed scaffold paths
    - create `dev`, `qa`, and `staging` from that initial commit
@@ -66,20 +79,22 @@ Do not infer a decision from directory existence or an architecture suggestion.
 
    Verify all four branches exist. Do not configure remotes, push, create GitHub
    repositories, or change repository protections.
-9. Run scaffold-appropriate checks that do not require unapproved installation. Record
+11. Run scaffold-appropriate checks that do not require unapproved installation. Record
    commands, results, skipped checks, and blockers.
-10. Write `intake/outputs/project_setup_report.md` unless the human approves another
+12. Write `intake/outputs/project_setup_report.md` unless the human approves another
     exact evidence path. Include:
     - approved recommendation path and SHA-256
     - target directory
     - files and directories created
     - stack and approved deviations
     - dependency decisions
+    - repository guidance created in `AGENTS.md`
+    - categorized environment prerequisites
     - Git branch and commit evidence
     - data included or deliberately excluded
     - verification results
     - remaining human decisions and blockers
-11. Stop before task decomposition, implementation, remote creation, push, or deployment.
+13. Stop before task decomposition, implementation, remote creation, push, or deployment.
 
 ## Completion Conditions
 
@@ -87,6 +102,7 @@ Report setup complete only when:
 
 - the architecture gate passed immediately before setup
 - the scaffold matches the approved architecture
+- a repository-root `AGENTS.md` records the approved project rules and available checks
 - no forbidden data or path was accessed
 - dependency decisions are documented
 - `main`, `dev`, `qa`, and `staging` exist locally at the reviewed initial commit

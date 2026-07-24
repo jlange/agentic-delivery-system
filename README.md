@@ -33,6 +33,8 @@ verification commands, required evidence, and explicit human gates. Draft tasks 
 pass structural plan validation and receive human approval before implementation.
 When a decision blocks only later work, a human may authorize a bounded partial plan;
 every omitted requirement must be recorded with a reason and re-entry condition.
+Execution planning also records command ownership, generated paths, environment
+prerequisites, and shared approval changes that must land before parallel branches.
 
 ## Safety boundaries
 

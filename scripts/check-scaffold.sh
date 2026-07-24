@@ -24,6 +24,7 @@ required=(
   "docs/operating-model.md"
   "docs/manual-todo.md"
   "docs/learnings/architecture-approval-gates.md"
+  "docs/learnings/manual-foundation-pilot.md"
   "skills/architecture-recommendation/SKILL.md"
   "skills/project-setup/SKILL.md"
   "skills/task-decomposition/SKILL.md"

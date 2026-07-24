@@ -20,5 +20,6 @@ the recommendation's traceability section. Searching the whole document or check
 one example ID can hide omissions; validators should report the complete missing set.
 
 Project setup must eventually create the long-lived `main`, `dev`, `qa`, and `staging`
-branches required by `docs/branching-strategy.md`. The current demo initializer creates
-only `main`; branch creation remains reserved for the future project-setup stage.
+branches required by `docs/branching-strategy.md`. The demo initializer remains a
+minimal example, while the `project-setup` skill requires all four local branches at
+the reviewed scaffold commit before setup is complete.
