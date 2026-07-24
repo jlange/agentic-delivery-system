@@ -59,10 +59,27 @@ Never repair or bypass an entry-gate failure while decomposing tasks.
    every material requirement to implementation ownership and every acceptance
    criterion to verification. For a partial plan, map each approved ID to exactly one
    of task coverage or an explicit deferral.
-3. Split work into the smallest independently implementable and reviewable vertical
+3. Build a command-provenance matrix. For every verification command, identify whether
+   it exists in the approved scaffold or which task creates it. Sequence each consumer
+   after the owning task. Treat missing scripts, test harnesses, generators, services,
+   and runtimes as blockers or explicit prerequisites rather than assuming they exist.
+4. Inventory tracked files that setup, generation, build, migration, and test commands
+   are expected to create or modify. Include those exact files in allowed paths before
+   approval. Do not use a broad directory merely because a framework may generate one
+   focused file.
+5. Classify non-repository prerequisites separately:
+   - package or lockfile installation
+   - downloaded tool artifacts such as browser binaries
+   - operating-system libraries
+   - external services or credentials
+   - interactive privileges such as `sudo`
+
+   Record the owning task, approval source, verification method, and stopping behavior
+   for each prerequisite. Never infer one category's authorization from another.
+6. Split work into the smallest independently implementable and reviewable vertical
    slices. Create foundation-only tasks when later work genuinely depends on shared
    routing, schema, design primitives, or tooling.
-4. Assign one primary role and a stable role prefix:
+7. Assign one primary role and a stable role prefix:
    - `FE` frontend engineer
    - `API` backend engineer
    - `DB` database engineer
@@ -70,21 +87,26 @@ Never repair or bypass an entry-gate failure while decomposing tasks.
    - `QA` QA engineer
    - `SEC` security reviewer
    - `DES` design reviewer
-5. Give each task explicit repository-relative allowed paths. Use the narrowest paths
+8. Give each task explicit repository-relative allowed paths. Use the narrowest paths
    that permit completion. Always forbid secrets, environment files, unrelated client
    material, broad home or mounted-drive paths, and unapproved architecture artifacts.
-6. Encode dependencies by task ID. Sequence migrations before consumers and shared
+9. Encode dependencies by task ID. Sequence migrations before consumers and shared
    foundations before feature tasks. Tasks that can run concurrently must not own the
-   same files or overlapping path trees.
-7. Write observable acceptance criteria tied to approved requirements. Do not restate
+   same files or overlapping path trees. Also confirm their environment prerequisites
+   can run concurrently without shared ports, services, caches, or interactive prompts.
+10. Write observable acceptance criteria tied to approved requirements. Do not restate
    implementation steps as acceptance criteria.
-8. Specify commands that can actually run in the scaffolded project and evidence that
+11. Specify commands that can actually run in the scaffolded project and evidence that
    proves the result. Include focused checks plus broader regression checks when risk
    warrants them. Do not propose dependency installation unless separately approved.
-9. Mark every generated task `status: draft`. Set `human_gate: true` when execution,
+12. Mark every generated task `status: draft`. Set `human_gate: true` when execution,
    data access, migrations, paid services, credentials, external systems, destructive
    actions, or architecture-sensitive choices require human approval.
-10. Write the plan outputs, run the bundled validator, resolve structural errors, and
+13. For a parallel wave, require shared checklist and task-approval changes to land
+    through the repository's normal branch and review policy before creating concurrent
+    implementation branches. Each implementation task must start from that common
+    approved commit and must not edit shared governance files.
+14. Write the plan outputs, run the bundled validator, resolve structural errors, and
     present the plan for human review. Never change task status to `approved` yourself.
 
 ## Partial Plans
@@ -133,6 +155,9 @@ Use the canonical task schema without additional YAML fields. Put cross-task det
 - source artifacts and approved architecture digest
 - requirement and acceptance-criterion coverage matrix
 - dependency graph and ordered execution waves
+- command-provenance matrix
+- generated-file inventory
+- categorized environment-prerequisite matrix
 - safe concurrency groups and shared-file exclusions
 - risk and human-gate summary
 - verification strategy
@@ -185,7 +210,10 @@ Report a full decomposition complete for review only when every approved ID has 
 coverage. Report a partial decomposition complete for review only when every approved
 ID has exactly one of task coverage or a valid deferral, the limited scope has human
 authorization, and no global blocker remains. In both cases, require valid tasks,
-acyclic dependencies, safe concurrency, bounded paths, and runnable verification.
+acyclic dependencies, safe concurrency, bounded paths, command provenance, generated
+path ownership, categorized prerequisites, and runnable verification. Describe partial
+coverage as foundation contribution or partial-plan accounting, never complete product
+requirement satisfaction.
 
 ## Boundaries
 
