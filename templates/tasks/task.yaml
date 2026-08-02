@@ -1,7 +1,7 @@
 id: FE-001
 title: Replace with a bounded task title
 role: frontend_engineer
-status: draft
+status: awaiting_approval
 risk: low
 requirement_ids:
   - REQ-001
@@ -18,3 +18,14 @@ verification_commands:
 required_evidence:
   - Command output summary.
 human_gate: true
+approval:
+  status: pending
+  artifact: docs/task-plan-review-checklist.md
+  scope: pending human approval
+execution_gate:
+  requires_merged: []
+contracts:
+  reads: []
+  writes: []
+runtime_resources: []
+amendments: []

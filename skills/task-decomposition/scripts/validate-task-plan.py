@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a draft task set before human approval."""
+"""Validate a task set awaiting durable human approval."""
 
 from __future__ import annotations
 
@@ -139,8 +139,10 @@ def validate_plan(
             errors.append(f"{path}: duplicate task id {task_id}")
         else:
             tasks[task_id] = task
-        if task["status"] != "draft":
-            errors.append(f"{path}: status must be draft before human approval")
+        if task["status"] != "awaiting_approval":
+            errors.append(f"{path}: status must be awaiting_approval before human approval")
+        if set(task["dependencies"]) != set(task["execution_gate"]["requires_merged"]):
+            errors.append(f"{path}: execution merge gates must match dependencies")
         for index, allowed_path in enumerate(task["allowed_paths"]):
             if unsafe_allowed_path(allowed_path):
                 errors.append(f"{path}: allowed_paths.{index} is broad or unsafe")
@@ -177,7 +179,7 @@ def validate_plan(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate draft task-plan YAML files.")
+    parser = argparse.ArgumentParser(description="Validate task-plan YAML awaiting approval.")
     parser.add_argument("--schema", required=True, type=Path)
     parser.add_argument("--requirements", required=True, type=Path)
     parser.add_argument("--tasks", required=True, type=Path)

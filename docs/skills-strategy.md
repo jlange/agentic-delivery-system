@@ -83,6 +83,9 @@ Create these first:
 - `retrospective`
 
 Do not create all skills at once. Add them when the workflow is clear enough to encode.
+Prefer lifecycle capabilities over role-shaped skills: one bounded task-execution skill
+can guide frontend, backend, database, QA, and DevOps work through repository-specific
+instructions without duplicating generic engineering knowledge.
 
 ## Implemented workflow skills
 
@@ -90,9 +93,19 @@ Do not create all skills at once. Add them when the workflow is clear enough to 
 - `architecture-recommendation`
 - `project-setup`
 - `task-decomposition`
+- `autonomous-delivery-orchestration`
+- `execute-delivery-task`
 
 `task-decomposition` is the required boundary between an approved project scaffold and
 implementation. It produces draft task files and a human review gate; it does not
 approve or execute tasks. It may produce a human-authorized partial plan when all
 omitted requirements and acceptance criteria have explicit reasons and re-entry
 conditions; unresolved work is never silently dropped.
+
+`autonomous-delivery-orchestration` selects approved dependency-ready work, computes
+safe concurrency, coordinates independent review, and resumes after merges.
+`execute-delivery-task` performs the actual authorized product work and verification,
+including a resumable bounded-amendment protocol.
+
+See `docs/autonomous-delivery-design.md` for the coverage map and extraction order for
+the next skills.

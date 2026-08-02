@@ -63,8 +63,24 @@ def validate_task(task: Any, schema: dict[str, Any]) -> list[str]:
     if errors or not isinstance(task, dict):
         return errors
 
-    if task["status"] != "approved":
-        errors.append("status: task must be approved before execution")
+    executable_states = {"approved", "executable", "implementing", "amendment_approved"}
+    if task["status"] not in executable_states:
+        errors.append("status: task is not in an executable approved state")
+
+    approval = task.get("approval", {})
+    if approval.get("status") != "approved":
+        errors.append("approval.status: durable human approval is required")
+
+    dependency_set = set(task.get("dependencies", []))
+    merge_gate_set = set(task.get("execution_gate", {}).get("requires_merged", []))
+    if dependency_set != merge_gate_set:
+        errors.append("execution_gate.requires_merged: must match dependencies")
+
+    for amendment_index, amendment in enumerate(task.get("amendments", [])):
+        if amendment.get("status") == "approved" and not amendment.get("approval_artifact"):
+            errors.append(
+                f"amendments.{amendment_index}.approval_artifact: required for an approved amendment"
+            )
 
     for index, path in enumerate(task["allowed_paths"]):
         if unsafe_allowed_path(path):

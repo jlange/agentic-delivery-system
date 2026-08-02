@@ -1,0 +1,68 @@
+---
+name: autonomous-delivery-orchestration
+description: Advance an approved delivery wave through dependency-ready task selection, isolated execution, verification, independent review, pull requests, merge detection, and automatic resumption. Use when a repository contains machine-readable approved task YAML and the operator wants bounded implementation to continue with minimal prompting while stopping for product decisions, authorization conflicts, unsafe operations, or failed mandatory gates.
+---
+
+# Autonomous Delivery Orchestration
+
+Treat repository task and authorization artifacts as the control plane. Coordinate work;
+do not reinterpret scope or perform implementation directly when an execution agent can
+own a bounded task.
+
+## Entry Gate
+
+1. Read repository policy, the approved wave, task YAML, and integration-branch state.
+2. Validate every task against the canonical schema and planning validator.
+3. Require a durable approval record whose scope includes the task and whose artifact
+   digest or revision still matches.
+4. Derive task readiness. A task is executable only when it is approved, every
+   `execution_gate.requires_merged` task is merged, no amendment is pending, and its
+   required environment is available.
+5. Stop if prose, diagrams, task metadata, approval records, or Git state disagree.
+
+## Scheduling Loop
+
+1. Refresh the integration branch and pull-request state.
+2. Reconcile merged tasks and update their durable state through the repository's
+   approved state-update mechanism.
+3. Compute executable tasks from metadata; never choose from conversational memory.
+4. Compute safe concurrency using all of:
+   - non-overlapping allowed paths
+   - no shared contract written by more than one active task
+   - no mutually exclusive runtime resource or test-state claim
+   - common ancestry at the approved planning revision
+5. Select the earliest owner-testable vertical slice before supporting or read-only
+   work when dependencies permit.
+6. Create an isolated branch or worktree and invoke `execute-delivery-task` with only
+   the task path and repository starting point.
+7. After verification, request independent review by a different agent or reviewer.
+8. Open a pull request only when task authorization permits remote writes. Attach
+   requirement IDs, verification evidence, amendment history, and review outcome.
+9. Wait for review or merge without widening scope. On merge, restart this loop.
+
+Read [references/state-machine.md](references/state-machine.md) when implementing or
+auditing orchestration state transitions.
+
+## Bounded Amendments
+
+When correct implementation needs a path or permission outside current authorization:
+
+1. Stop only the affected task.
+2. Record `amendment_requested` with the exact path, reason, permitted change, and
+   additional verification.
+3. Continue unrelated safe tasks.
+4. Resume only after a human approval record is added and validated.
+5. Grant only the approved change; an amendment never authorizes unrelated edits.
+
+## Stop Conditions
+
+Stop the affected work for a new product or architecture decision, metadata conflict,
+unapproved scope expansion, sensitive-data risk, destructive operation without a
+safeguard, incompatible review directions, or an unsatisfied mandatory check. Do not
+stop merely because another approved task is waiting on a merge or review.
+
+## Completion
+
+A wave is complete only when every included task is merged or explicitly cancelled by
+an authorized record, all acceptance evidence is present, and the owner-testable slice
+has an executable acceptance path. Report deferred work and its re-entry conditions.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Autonomous Delivery Orchestration"
+  short_description: "Advance approved tasks safely through delivery"
+  default_prompt: "Use $autonomous-delivery-orchestration to advance the next approved delivery task."
