@@ -95,6 +95,7 @@ instructions without duplicating generic engineering knowledge.
 - `task-decomposition`
 - `autonomous-delivery-orchestration`
 - `execute-delivery-task`
+- `independent-local-review`
 
 `task-decomposition` is the required boundary between an approved project scaffold and
 implementation. It produces draft task files and a human review gate; it does not
@@ -106,6 +107,8 @@ conditions; unresolved work is never silently dropped.
 safe concurrency, coordinates independent review, and resumes after merges.
 `execute-delivery-task` performs the actual authorized product work and verification,
 including a resumable bounded-amendment protocol.
+`independent-local-review` standardizes read-only Claude review of the complete branch
+diff and validates that its evidence belongs to the current HEAD.
 
 See `docs/autonomous-delivery-design.md` for the coverage map and extraction order for
 the next skills.

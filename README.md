@@ -24,8 +24,8 @@ The initial workflow is supervised and repository-based:
 6. Task decomposition
 7. Human approval of the task plan
 8. Agent execution in isolated worktrees
-9. Automated testing and independent review
-10. Human merge approval
+9. Automated testing, local commit, and exact-HEAD Claude Code review
+10. Pull request, checks, remediation, authorized merge, and post-merge verification
 11. Staging, acceptance, delivery, and retrospective
 
 Task decomposition produces draft, dependency-aware YAML tasks with bounded paths,
@@ -42,7 +42,7 @@ Agents must not:
 
 - Invent unresolved client requirements.
 - Push directly to `main`.
-- Merge their own work.
+- Bypass independent review or treat reviewer failure as approval.
 - Deploy to production without human approval.
 - Store secrets or client data in source control.
 - Make billing, account, legal, or contractual decisions.

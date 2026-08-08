@@ -36,9 +36,16 @@ own a bounded task.
 6. Create an isolated branch or worktree and invoke `execute-delivery-task` with only
    the task path and repository starting point.
 7. After verification, request independent review by a different agent or reviewer.
-8. Open a pull request only when task authorization permits remote writes. Attach
+8. Require a committed implementation and use `independent-local-review`. The review
+   must be clean or fully dispositioned for the exact HEAD before push. Rerun it after
+   every commit; stop on reviewer unavailability or invalid output.
+9. Open a pull request when approved wave authorization permits remote writes. Attach
    requirement IDs, verification evidence, amendment history, and review outcome.
-9. Wait for review or merge without widening scope. On merge, restart this loop.
+10. Wait for required CI and configured reviews. Remediate actionable feedback and
+    repeat verification and local review after changes.
+11. Merge when required conditions pass and authorization already covers the merge.
+    Refresh the integration branch and verify the merged commit and checks. Then restart
+    this loop. Do not stop at pull-request creation.
 
 Read [references/state-machine.md](references/state-machine.md) when implementing or
 auditing orchestration state transitions.
@@ -56,10 +63,13 @@ When correct implementation needs a path or permission outside current authoriza
 
 ## Stop Conditions
 
-Stop the affected work for a new product or architecture decision, metadata conflict,
-unapproved scope expansion, sensitive-data risk, destructive operation without a
-safeguard, incompatible review directions, or an unsatisfied mandatory check. Do not
-stop merely because another approved task is waiting on a merge or review.
+Stop the affected work for a financial, legal, contractual, licensing, regulatory or
+compliance decision; a missing human-only credential or permission; ungranted
+production authority; an irreversible unresolved business decision; metadata conflict;
+unapproved scope expansion; sensitive-data risk; reviewer failure; destructive action
+without safeguards; incompatible review directions; or an unsatisfied mandatory check.
+Routine Git, dependency, test, commit, push, pull-request, and authorized merge actions
+are not human decisions. Use normal environment permission prompts when required.
 
 ## Completion
 

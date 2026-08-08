@@ -1,35 +1,32 @@
 # Operating Model
 
-This delivery system uses bounded autonomy by default. Humans approve product intent,
-architecture, and delivery waves. Agents may then select, implement, verify, review,
-and advance machine-authorized tasks until a genuine decision or safety boundary is
-reached. Humans retain control over scope changes, billing, production credentials,
-protected merges, deployments, and destructive actions.
+Humans approve product intent, architecture, and bounded delivery waves. Within that
+authorization, agents autonomously synchronize the integration branch, create task
+branches, implement, install ordinary dependencies, verify, commit, obtain independent
+review, push, open and remediate pull requests, merge, synchronize locally, and verify
+the merged result. The integration branch defaults to `dev` and is configurable.
 
-## Flow
+## Delivery loop
 
-1. Capture client material.
-2. Extract explicit requirements, assumptions, questions, risks, and acceptance criteria.
-3. Approve scope before architecture work begins.
-4. Produce a minimal architecture and execution plan.
-5. Approve the plan before implementation begins.
-6. Split work into bounded tasks with allowed paths, forbidden paths, verification commands, and required evidence.
-7. Validate and approve the task plan before assigning implementation work.
-8. Select approved dependency-ready work and run implementation in isolated branches or worktrees.
-9. Run automated checks and independent review.
-10. Open a pull request and merge according to the wave's durable authorization.
-11. Detect merges, unlock dependents, and continue automatically.
-12. Present the earliest usable slice for owner acceptance.
-13. Record lessons and process improvements.
+```text
+approved wave -> sync -> branch -> implement -> verify -> commit -> Claude exact-HEAD review
+-> fix/disposition -> rereview after changes -> push -> PR -> CI/reviews -> remediation
+-> merge -> sync integration -> verify merge -> complete
+```
 
-## Human gates
+An open pull request is not completion.
 
-- Contract scope and pricing
-- Client decisions
-- Paid services and billing
-- Secrets and credentials
-- Production deploys
-- Merges to protected branches unless the approved wave explicitly configures an automatic merge policy
-- Destructive actions
-- Budget or concurrency increases
-- Task-plan authorization before implementation
+## Risk-based escalation
+
+Pause for financial consequences; legal, contractual, licensing, regulatory, or
+compliance consequences; human-only credentials or permissions; production authority
+not already granted; or an irreversible business decision unresolved by approved policy.
+Scope amendments and sensitive-data conflicts retain their authorization gates. Routine
+engineering operations are not business decisions; use normal tool permission prompts.
+
+## Enforcement
+
+- Behavioral guidance: repository `AGENTS.md`.
+- Standardized execution: exact-HEAD review tooling and evidence.
+- Optional mechanical enforcement: CI attestation validation and branch protection.
+  Local hooks alone are insufficient.

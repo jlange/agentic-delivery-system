@@ -6,7 +6,9 @@ This document defines GitHub's role in the agentic delivery system.
 
 GitHub is the source of truth for client project code, reviews, branches, issues, pull requests, and delivery history.
 
-Agents may assist with GitHub workflows, but humans retain control over repository ownership, permissions, merges, releases, and production deployment decisions.
+Agents may carry approved work through pull request and merge. Humans retain control
+over ownership, financial or legal decisions, missing credentials or permissions, and
+production authority not already granted.
 
 ## Repository ownership
 
@@ -79,7 +81,8 @@ Use independent review for:
 - client-critical user flows
 - large refactors
 
-Codex and Claude Code may review each other's work, but final merge approval remains human-controlled.
+Codex implementations require exact-HEAD, read-only Claude Code review before push.
+Agents may merge after required checks and reviews when the approved wave authorizes it.
 
 ## CI
 
@@ -106,7 +109,7 @@ Humans must approve:
 - branch protection changes
 - secrets and environment variables
 - billing or paid services
-- merges to long-lived branches
+- merges not covered by an approved delivery policy or protected-branch authorization
 - production releases
 - destructive repository actions
 

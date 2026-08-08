@@ -172,7 +172,9 @@ This creates a local Git repo scaffold under:
 ~/work/clients/<client>/<repo-name>
 ```
 
-Push to GitHub only with explicit human approval.
+After task-plan or wave authorization, push task branches and continue through the
+configured review and merge policy. Pause only for a risk-based escalation condition;
+do not add a redundant prompt for routine remote engineering actions.
 
 ### 8. Create Demo Task
 

@@ -32,13 +32,14 @@ The planning validator must eventually validate the complete repository plan:
 
 ```text
 approve wave -> select executable task -> isolated implementation -> verification
--> independent review -> pull request -> merge -> unlock dependents -> repeat
+-> local commit -> exact-HEAD Claude review -> push -> pull request -> checks/remediation
+-> authorized merge -> post-merge verification -> unlock dependents -> repeat
 ```
 
-Use `autonomous-delivery-orchestration` for the loop and `execute-delivery-task` for a
-single bounded implementation. A human remains responsible for product and architecture
-decisions, authorization expansions, protected merges if configured, production and
-destructive actions, and experiential acceptance.
+Use `autonomous-delivery-orchestration` for the loop, `execute-delivery-task` for one
+task, and `independent-local-review` for mandatory pre-push review. Humans remain
+responsible for financial/legal decisions, authorization expansions, human-only
+credentials, ungranted production authority, and experiential acceptance.
 
 ## Product-Evaluation Policy
 
@@ -59,7 +60,7 @@ production claims, and a warning against real sensitive data.
 | Executable wave planning | `task-decomposition` | Implemented; revised metadata |
 | Merge-aware scheduling and resumption | `autonomous-delivery-orchestration` | Added |
 | Product implementation and verification | `execute-delivery-task` | Added |
-| Independent pull-request review | `pull-request-review` | Next skill to extract from real reviews |
+| Independent local review | `independent-local-review` | Implemented with exact-HEAD attestation |
 | Cross-task acceptance and QA evidence | `qa-evidence` | Next skill to extract from a usable slice |
 | Security and privacy review | `security-review` | Add when a project threat model exists |
 | Release/deployment | `release-execution` | Add after an approved staging workflow |

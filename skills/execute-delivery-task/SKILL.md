@@ -1,6 +1,6 @@
 ---
 name: execute-delivery-task
-description: Implement, test, and prepare one approved machine-readable delivery task within its authorized paths and decisions. Use when an approved dependency-ready task must be completed in an isolated branch or worktree, including focused product code, database, frontend, backend, QA, design, security, or DevOps work and narrowly approved resumable path amendments.
+description: Carry one approved machine-readable delivery task through isolated implementation, verification, commit, exact-HEAD independent Claude review, pull request remediation, authorized merge, and post-merge verification. Use for dependency-ready product, database, frontend, backend, QA, design, security, or DevOps work and narrowly approved resumable amendments.
 ---
 
 # Execute Delivery Task
@@ -48,7 +48,7 @@ additional_verification:
 Set the task to `amendment_requested`, report the exact blocker, and stop this task.
 Resume from the existing worktree after a matching human approval is durable.
 
-## Verification and Handoff
+## Verification, Review, and Delivery
 
 1. Run every required verification command and proportional regression checks.
 2. Correct in-scope failures. Stop if a mandatory gate cannot pass within authorization.
@@ -56,15 +56,23 @@ Resume from the existing worktree after a matching human approval is durable.
    violations.
 4. Record concise command results and artifact evidence; do not claim skipped checks
    passed.
-5. Commit and push only if task authorization permits them.
-6. Hand the exact diff and evidence to an independent reviewer. The implementation
-   agent must not approve its own work or merge it.
+5. Commit locally before review. Use `independent-local-review` against the configured
+   integration base. Claude Code must be read-only and review the complete three-dot diff.
+6. Fix valid in-scope findings; technically disposition rejected, duplicate,
+   out-of-scope, or non-required stylistic findings. Rerun verification, commit fixes,
+   and review again whenever HEAD changes. Reviewer failure is a blocker, never approval.
+7. Validate the current-HEAD review attestation, push the task branch, and create a pull
+   request into the integration branch when authorized by the approved wave.
+8. Wait for required checks and reviews. Address actionable feedback, repeating local
+   verification and exact-HEAD review after changes.
+9. Merge when all repository conditions pass and existing authorization permits it.
+   Refresh the local integration branch and verify the merged commit and required checks.
 
 Read [references/evidence.md](references/evidence.md) when formatting completion
 evidence.
 
 ## Completion
 
-Report implementation complete only when all acceptance criteria have evidence, all
-required checks pass, the diff remains authorized, and an independent review can start.
-Otherwise report the precise resumable state and next authorized action.
+Report the task complete only after the pull request is merged, the local integration
+branch is synchronized, and the merged commit and required checks are verified. A local
+implementation, clean review, push, or open pull request is an intermediate state.
