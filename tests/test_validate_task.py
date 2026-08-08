@@ -32,11 +32,24 @@ class ValidateTaskTests(unittest.TestCase):
     def test_approved_bounded_task_is_valid(self) -> None:
         self.assertEqual([], self.errors_for())
 
-    def test_draft_task_is_rejected(self) -> None:
+    def test_task_awaiting_approval_is_rejected(self) -> None:
         self.assertIn(
-            "status: task must be approved before execution",
-            self.errors_for(status="draft"),
+            "status: task is not in an executable approved state",
+            self.errors_for(status="awaiting_approval"),
         )
+
+    def test_dependency_merge_gate_must_match(self) -> None:
+        errors = self.errors_for(dependencies=["DB-001"])
+        self.assertIn("execution_gate.requires_merged: must match dependencies", errors)
+
+    def test_approved_amendment_requires_artifact(self) -> None:
+        errors = self.errors_for(amendments=[{
+            "requested_path": "src/schema.ts",
+            "reason": "Required integrity constraint.",
+            "permitted_change": "Composite key only.",
+            "status": "approved",
+        }])
+        self.assertTrue(any("approval_artifact" in error for error in errors))
 
     def test_missing_path_boundaries_are_rejected(self) -> None:
         errors = self.errors_for(allowed_paths=[])

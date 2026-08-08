@@ -1,11 +1,11 @@
 ---
 name: task-decomposition
-description: Convert an approved architecture execution plan and completed project scaffold into bounded, dependency-aware draft implementation tasks, including safely limited partial plans when later work is blocked by unresolved decisions. Use after project setup and before implementation to map requirements and acceptance criteria, classify planning gates, recognize approved post-setup changes, assign roles and paths, validate task or deferral coverage, and prepare a human task-plan approval gate.
+description: Convert an approved architecture execution plan and completed project scaffold into bounded, dependency-aware machine-executable implementation tasks, including safely limited partial plans when later work is blocked by unresolved decisions. Use after project setup and before implementation to map requirements and acceptance criteria, prioritize the earliest owner-testable slice, encode durable authorization and merge gates, compute safe concurrency from paths, contracts, and runtime resources, and prepare a human task-plan approval gate.
 ---
 
 # Task Decomposition
 
-Create an executable plan, not product code. Produce draft tasks for human review and
+Create an executable plan, not product code. Produce tasks awaiting human approval and
 stop before branches, worktrees, implementation, remote operations, or deployment.
 
 ## Required Inputs
@@ -76,8 +76,10 @@ Never repair or bypass an entry-gate failure while decomposing tasks.
 
    Record the owning task, approval source, verification method, and stopping behavior
    for each prerequisite. Never infer one category's authorization from another.
-6. Split work into the smallest independently implementable and reviewable vertical
-   slices. Create foundation-only tasks when later work genuinely depends on shared
+6. Identify the smallest workflow the product owner can personally use with invented
+   local data. Order the first wave around that mutable, persistent vertical slice;
+   do not optimize for read-only traceability before usability. Split work into the
+   smallest independently implementable and reviewable vertical slices. Create foundation-only tasks when later work genuinely depends on shared
    routing, schema, design primitives, or tooling.
 7. Assign one primary role and a stable role prefix:
    - `FE` frontend engineer
@@ -90,7 +92,9 @@ Never repair or bypass an entry-gate failure while decomposing tasks.
 8. Give each task explicit repository-relative allowed paths. Use the narrowest paths
    that permit completion. Always forbid secrets, environment files, unrelated client
    material, broad home or mounted-drive paths, and unapproved architecture artifacts.
-9. Encode dependencies by task ID. Sequence migrations before consumers and shared
+9. Encode dependencies both by task ID and in `execution_gate.requires_merged`; they
+   must agree. Record each task's named contracts read or written and exclusive runtime
+   resources. Sequence migrations before consumers and shared
    foundations before feature tasks. Tasks that can run concurrently must not own the
    same files or overlapping path trees. Also confirm their environment prerequisites
    can run concurrently without shared ports, services, caches, or interactive prompts.
@@ -99,7 +103,10 @@ Never repair or bypass an entry-gate failure while decomposing tasks.
 11. Specify commands that can actually run in the scaffolded project and evidence that
    proves the result. Include focused checks plus broader regression checks when risk
    warrants them. Do not propose dependency installation unless separately approved.
-12. Mark every generated task `status: draft`. Set `human_gate: true` when execution,
+12. Mark every generated task `status: awaiting_approval` and add a pending approval
+   object that a human must update with approved status, approver, timestamp, scope,
+   and artifact.
+   Set `human_gate: true` when execution,
    data access, migrations, paid services, credentials, external systems, destructive
    actions, or architecture-sensitive choices require human approval.
 13. For a parallel wave, require shared checklist and task-approval changes to land
@@ -149,7 +156,8 @@ Write only to the exact approved planning paths, normally:
 - `docs/task-plan-review-checklist.md`
 - `docs/task-plan-deferrals.yaml` for a partial plan only
 
-Use the canonical task schema without additional YAML fields. Put cross-task details in
+Use the canonical task schema without additional YAML fields. Encode approval,
+merge gates, contract access, runtime resources, and amendments in task YAML. Put cross-task details in
 `docs/task-plan.md`, including:
 
 - source artifacts and approved architecture digest
@@ -197,8 +205,8 @@ python skills/task-decomposition/scripts/validate-task-plan.py \
   [--deferrals <target-project>/docs/task-plan-deferrals.yaml]
 ```
 
-The validator checks YAML structure, draft status, unique IDs, known acyclic
-dependencies, safe allowed paths, and aggregate `REQ-###`/`AC-###` task-or-deferral
+The validator checks YAML structure, awaiting-approval status, unique IDs, known acyclic
+dependencies, matching merge gates, safe allowed paths, and aggregate `REQ-###`/`AC-###` task-or-deferral
 coverage. A deferral file must identify partial scope, human authorization, reasons, and
 re-entry conditions. It does not grant human approval. After approval, run the delivery
 system's execution validator against each task before assigning it to an implementation

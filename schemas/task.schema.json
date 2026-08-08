@@ -16,7 +16,11 @@
     "acceptance_criteria",
     "verification_commands",
     "required_evidence",
-    "human_gate"
+    "human_gate",
+    "approval",
+    "execution_gate",
+    "contracts",
+    "runtime_resources"
   ],
   "properties": {
     "id": { "type": "string", "pattern": "^[A-Z]+-[0-9]{3}$" },
@@ -39,7 +43,13 @@
     },
     "status": {
       "type": "string",
-      "enum": ["draft", "approved", "in_progress", "blocked", "review", "done"]
+      "enum": [
+        "planned", "awaiting_approval", "approved_blocked_by_dependency",
+        "approved", "executable", "implementing", "amendment_requested",
+        "amendment_approved", "verifying", "independent_review",
+        "pull_request_open", "changes_requested", "review_approved", "merged",
+        "cancelled"
+      ]
     },
     "risk": {
       "type": "string",
@@ -78,7 +88,64 @@
       "items": { "type": "string" },
       "minItems": 1
     },
-    "human_gate": { "type": "boolean" }
+    "human_gate": { "type": "boolean" },
+    "approval": {
+      "type": "object",
+      "required": ["status", "artifact", "scope"],
+      "properties": {
+        "status": { "enum": ["pending", "approved"] },
+        "artifact": { "type": "string", "minLength": 1 },
+        "approved_by": { "type": "string", "minLength": 1 },
+        "approved_at": { "type": "string", "format": "date-time" },
+        "scope": { "type": "string", "minLength": 1 },
+        "artifact_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "approved" } } },
+          "then": { "required": ["approved_by", "approved_at"] }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "execution_gate": {
+      "type": "object",
+      "required": ["requires_merged"],
+      "properties": {
+        "requires_merged": { "type": "array", "items": { "type": "string" } },
+        "required_integration_revision": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "contracts": {
+      "type": "object",
+      "required": ["reads", "writes"],
+      "properties": {
+        "reads": { "type": "array", "items": { "type": "string" } },
+        "writes": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "runtime_resources": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "amendments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["requested_path", "reason", "permitted_change", "status"],
+        "properties": {
+          "requested_path": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 },
+          "permitted_change": { "type": "string", "minLength": 1 },
+          "additional_verification": { "type": "array", "items": { "type": "string" } },
+          "status": { "enum": ["requested", "approved", "rejected"] },
+          "approval_artifact": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
   },
   "additionalProperties": false
 }

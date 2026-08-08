@@ -30,3 +30,17 @@ required_evidence:
   - Passing unit-test output covering valid, malformed, unapproved, incomplete, and unsafe tasks.
   - Passing scaffold-check output.
 human_gate: true
+approval:
+  status: approved
+  artifact: docs/learnings/task-validation.md
+  approved_by: Project Owner
+  approved_at: "2026-07-22T00:00:00Z"
+  scope: Implement and verify ADS-001 within its allowed paths.
+execution_gate:
+  requires_merged: []
+contracts:
+  reads:
+    - task.schema.v1
+  writes: []
+runtime_resources: []
+amendments: []

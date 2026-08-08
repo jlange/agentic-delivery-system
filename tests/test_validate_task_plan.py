@@ -29,7 +29,7 @@ class ValidateTaskPlanTests(unittest.TestCase):
             "id": task_id,
             "title": "Build approved project slice",
             "role": "frontend_engineer",
-            "status": "draft",
+            "status": "awaiting_approval",
             "risk": "low",
             "requirement_ids": ["REQ-001"],
             "dependencies": dependencies or [],
@@ -39,6 +39,15 @@ class ValidateTaskPlanTests(unittest.TestCase):
             "verification_commands": ["pnpm test"],
             "required_evidence": ["Passing output for AC-001."],
             "human_gate": False,
+            "approval": {
+                "status": "pending",
+                "artifact": "docs/task-plan-review-checklist.md",
+                "scope": "pending human approval",
+            },
+            "execution_gate": {"requires_merged": dependencies or []},
+            "contracts": {"reads": [], "writes": []},
+            "runtime_resources": [],
+            "amendments": [],
         }
 
     def validate(
@@ -60,7 +69,7 @@ class ValidateTaskPlanTests(unittest.TestCase):
                 deferrals,
             )
 
-    def test_valid_draft_plan_is_accepted(self) -> None:
+    def test_valid_awaiting_approval_plan_is_accepted(self) -> None:
         self.assertEqual([], self.validate([self.task()]))
 
     def test_unapproved_or_missing_coverage_is_rejected(self) -> None:
@@ -84,10 +93,10 @@ class ValidateTaskPlanTests(unittest.TestCase):
         task["allowed_paths"] = ["/mnt/c"]
         self.assertTrue(any("broad or unsafe" in error for error in self.validate([task])))
 
-    def test_non_draft_task_is_rejected(self) -> None:
+    def test_non_awaiting_approval_task_is_rejected(self) -> None:
         task = self.task()
         task["status"] = "approved"
-        self.assertTrue(any("status must be draft" in error for error in self.validate([task])))
+        self.assertTrue(any("status must be awaiting_approval" in error for error in self.validate([task])))
 
     def test_partial_plan_accepts_explained_deferral(self) -> None:
         deferrals = {

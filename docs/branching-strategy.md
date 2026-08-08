@@ -11,7 +11,8 @@ Client project repositories should use these long-lived branches:
 - `qa`: integrated quality-assurance branch.
 - `dev`: active integration branch for approved implementation work.
 
-Feature and task branches should be short-lived and branch from `dev`.
+Feature and task branches should be short-lived and branch from the configured
+integration branch, which defaults to `dev`.
 
 ## Default flow
 
@@ -19,9 +20,10 @@ feature/* -> dev -> qa -> staging -> main
 
 ## Agent rules
 
-- Do not push directly to `main`, `staging`, `qa`, or `dev` unless a human explicitly approves it.
+- Do not push task commits directly to long-lived branches. Use pull requests.
 - Implementation agents should work on task branches such as `feature/FE-001-homepage-layout` or `task/API-003-auth-endpoint`.
-- Merge upward only after the required checks and reviews for the target branch are complete.
+- Merge upward after required checks and reviews. An approved delivery wave may
+  authorize routine agent merge without a redundant human gate.
 - Treat `main` as production-controlled even when the project has not launched yet.
 - Treat `staging` as the final client or release-candidate validation branch.
 - Treat `qa` as the branch for integrated test verification.

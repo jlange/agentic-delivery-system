@@ -1,0 +1,4 @@
+interface:
+  display_name: "Execute Delivery Task"
+  short_description: "Implement and verify one approved task"
+  default_prompt: "Use $execute-delivery-task to implement the next approved bounded task."

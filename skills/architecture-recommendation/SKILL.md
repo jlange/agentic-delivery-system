@@ -64,9 +64,17 @@ If any declaration is absent, contradictory, or marked pending, treat it as a bl
 11. Define accessibility, backup/recovery, and verification expectations proportional
     to the approved requirements and risk.
 12. Identify risks, assumptions, and decisions requiring human approval.
-13. Propose a demo/prototype path when useful.
-14. Create a draft human review checklist; never approve it yourself.
-15. Stop before project creation, task decomposition, or implementation.
+13. Define the earliest owner-testable vertical slice: the smallest workflow the
+   product owner can personally use to create, persist, and inspect invented local
+   data. Do not substitute a read-only fixture demonstration when mutable product
+   behavior is needed for meaningful evaluation.
+14. When production identity, hosting, or compliance decisions are intentionally
+   deferred, define an explicit local sandbox boundary: invented data only, fixed
+   server-owned local identity, local persistence, no invitations or external
+   services, no production claims, and prominent instructions not to enter real
+   sensitive data.
+15. Create a draft human review checklist; never approve it yourself.
+16. Stop before project creation, task decomposition, or implementation.
 
 ## Output
 

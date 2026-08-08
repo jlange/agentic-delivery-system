@@ -61,6 +61,10 @@ Do not infer a decision from directory existence or an architecture suggestion.
 
    Keep it project-specific and concise. Do not copy the delivery system's `AGENTS.md`
    verbatim or claim commands are runnable before their dependencies exist.
+   Start from `templates/repository/AGENTS.md`, configure its integration branch and
+   verification commands, and preserve risk-based escalation and exact-HEAD review.
+   Also create `.gitattributes` from `templates/repository/.gitattributes`, keep shell
+   scripts LF-only and executable, and include `bash -n` validation where available.
 7. Record environment prerequisites by category: repository dependencies, generated
    tool artifacts, operating-system libraries, services or credentials, and interactive
    privileges. Approval in one category does not authorize another. Do not install or
@@ -68,9 +72,10 @@ Do not infer a decision from directory existence or an architecture suggestion.
 8. Do not copy intake or architecture artifacts into the new repository unless the
    human explicitly approves those exact artifacts for source control. Never copy raw
    sources, secrets, credentials, `.env` contents, or unnecessary client data.
-9. Do not install dependencies or create accounts. Add dependency declarations only
-   when the architecture approves them and record the reason. If installation or a
-   generated lockfile is required, stop for explicit approval.
+9. Do not create accounts or paid services. Install ordinary project dependencies when
+   needed for the approved scaffold, using normal environment permission prompts. Add
+   declarations only when the architecture approves them and record the reason. Pause
+   for financial, licensing, credential, compliance, or production consequences.
 10. When local Git initialization and the initial scaffold commit are approved:
    - initialize `main`
    - commit only the reviewed scaffold paths

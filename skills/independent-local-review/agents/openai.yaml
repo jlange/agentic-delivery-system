@@ -1,0 +1,4 @@
+interface:
+  display_name: "Independent Local Review"
+  short_description: "Run exact-HEAD Claude review before push"
+  default_prompt: "Use $independent-local-review to review the complete branch diff against the configured integration base and record a structured exact-HEAD result."

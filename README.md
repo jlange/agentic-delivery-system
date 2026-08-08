@@ -1,16 +1,16 @@
 # Agentic Delivery System
 
-A supervised software-delivery framework for contract websites, web applications, internal tools, automation projects, and self-owned software products.
+A bounded-autonomy software-delivery framework for contract websites, web applications, internal tools, automation projects, and self-owned software products.
 
 The system is designed to:
 
 - Convert client briefs into approved requirements and acceptance criteria.
 - Generate architecture and execution plans before implementation begins.
 - Break approved plans into bounded, dependency-aware tasks.
-- Delegate work to specialized agents using isolated Git worktrees.
+- Select and delegate approved dependency-ready work using isolated Git worktrees.
 - Require automated verification and independent review before merge.
 - Preserve evidence, decisions, and lessons from every project.
-- Improve the delivery process through Compound Engineering.
+- Resume after approved merges and improve the delivery process through Compound Engineering.
 
 ## Operating model
 
@@ -24,8 +24,8 @@ The initial workflow is supervised and repository-based:
 6. Task decomposition
 7. Human approval of the task plan
 8. Agent execution in isolated worktrees
-9. Automated testing and independent review
-10. Human merge approval
+9. Automated testing, local commit, and exact-HEAD Claude Code review
+10. Pull request, checks, remediation, authorized merge, and post-merge verification
 11. Staging, acceptance, delivery, and retrospective
 
 Task decomposition produces draft, dependency-aware YAML tasks with bounded paths,
@@ -42,7 +42,7 @@ Agents must not:
 
 - Invent unresolved client requirements.
 - Push directly to `main`.
-- Merge their own work.
+- Bypass independent review or treat reviewer failure as approval.
 - Deploy to production without human approval.
 - Store secrets or client data in source control.
 - Make billing, account, legal, or contractual decisions.
@@ -66,7 +66,8 @@ Agents must not:
 
 This repository is in supervised pilot use. It has been used for an initial client-style intake, demo project, pull request, and independent review workflow. Production client work still requires human review, explicit approval gates, and project-specific safeguards.
 
-Implemented reusable workflow skills currently cover contract intake, architecture
-recommendation, project setup, task decomposition, and the supervised client-delivery
-pipeline. Later implementation, QA-evidence, review, release, and retrospective skills
-will be added from validated project workflows.
+Implemented reusable workflow skills now cover contract intake, architecture
+recommendation, project setup, executable task decomposition, autonomous delivery
+orchestration, bounded task execution, and the legacy supervised client-delivery
+pipeline. Independent review, QA evidence, release, acceptance, and retrospective
+skills remain intentionally staged for extraction from validated project workflows.
