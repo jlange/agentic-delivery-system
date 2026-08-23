@@ -201,7 +201,10 @@ Record alternatives and rationale here.
 
 ## Unresolved Blockers
 
-Record blockers here. A human reviewer may enter `None.` only when all blockers are resolved.
+Record blockers here. When all blockers are resolved, a human reviewer may enter an
+unambiguous declaration such as `None.`, `No blockers`, or `No unresolved blockers`.
+The gate ignores capitalization, surrounding whitespace, optional blank lines, and an
+optional Markdown bullet, but it rejects ambiguous prose and does not guess misspellings.
 
 ## Reviewer Notes
 

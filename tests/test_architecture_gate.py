@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import subprocess
 import tempfile
 import unittest
@@ -12,21 +13,37 @@ ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "skills" / "client-delivery-pipeline" / "scripts" / "client_pipeline.sh"
 
 
+def bash_path(path: Path) -> str:
+    """Return a path Git Bash and native Bash can both consume."""
+    resolved_path = path.resolve()
+    try:
+        relative = resolved_path.relative_to(ROOT)
+        return relative.as_posix() or "."
+    except ValueError:
+        pass
+    resolved = str(resolved_path)
+    if os.name == "nt":
+        drive, remainder = os.path.splitdrive(resolved)
+        return f"/{drive[0].lower()}{remainder.replace(chr(92), '/')}"
+    return resolved
+
+
 class ArchitectureGateTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temporary_directory = tempfile.TemporaryDirectory()
+        self.temporary_directory = tempfile.TemporaryDirectory(dir=ROOT)
         self.addCleanup(self.temporary_directory.cleanup)
         self.work_root = Path(self.temporary_directory.name) / "work"
         self.clients_root = self.work_root / "clients"
         self.environment = os.environ.copy()
         self.environment.update(
             {
-                "WORK_ROOT": str(self.work_root),
-                "CLIENTS_ROOT": str(self.clients_root),
-                "SYSTEM_ROOT": str(ROOT),
+                "WORK_ROOT": bash_path(self.work_root),
+                "CLIENTS_ROOT": bash_path(self.clients_root),
+                "SYSTEM_ROOT": bash_path(ROOT),
             }
         )
-        self.run_script("init-intake", "example")
+        initialization = self.run_script("init-intake", "example")
+        self.assertEqual(0, initialization.returncode, initialization.stderr)
         self.intake = self.clients_root / "example" / "intake"
         (self.intake / "outputs" / "contract_intake_output.md").write_text(
             """# Contract Intake Output
@@ -53,8 +70,9 @@ External AI client-data use: prohibited
 
     def run_script(self, *arguments: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            ["bash", str(SCRIPT), *arguments],
+            ["bash", "-l", bash_path(SCRIPT), *arguments],
             env=self.environment,
+            cwd=ROOT,
             text=True,
             capture_output=True,
             check=False,
@@ -100,7 +118,7 @@ ADR-001.
 """
         output = self.intake / "outputs" / "architecture_recommendation.md"
         output.write_text(recommendation, encoding="utf-8")
-        digest = hashlib.sha256(recommendation.encode()).hexdigest()
+        digest = hashlib.sha256(output.read_bytes()).hexdigest()
         decisions = "approved" if review_status == "approved" else "pending"
         blockers = "None." if review_status == "approved" else "REQ-002 needs a decision."
         (self.intake / "decisions" / "architecture_review_checklist.md").write_text(
@@ -145,6 +163,25 @@ None.
         result = self.run_script("write-architecture-prompt", "example")
         self.assertNotEqual(0, result.returncode)
         self.assertIn("intake status must be approved", result.stderr)
+
+    def test_architecture_prompt_accepts_case_and_whitespace_variations(self) -> None:
+        checklist = self.intake / "decisions" / "intake_review_checklist.md"
+        checklist.write_text(
+            """# Approved Intake Review
+
+"""
+            + "  intake STATUS : APPROVED  \n"
+            + """
+Allowed Paths: intake/outputs and intake/decisions
+Forbidden Paths: mounted drives and unrelated client folders
+Raw Source Review: Prohibited
+Redaction Requirement: Required
+External AI Client-Data Use: Prohibited
+""",
+            encoding="utf-8",
+        )
+        result = self.run_script("write-architecture-prompt", "example")
+        self.assertEqual(0, result.returncode, result.stderr)
 
     def test_generated_intake_checklist_has_architecture_gate_fields(self) -> None:
         result = self.run_script("write-review-checklist", "example")
@@ -221,6 +258,72 @@ None.
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertIn("Architecture gate approved for example", result.stdout)
         self.assertEqual([], list((self.clients_root / "example").glob("*/.git")))
+
+    def test_gate_accepts_harmless_human_format_variations(self) -> None:
+        self.write_architecture_artifacts()
+        output = self.intake / "outputs" / "architecture_recommendation.md"
+        recommendation = output.read_text(encoding="utf-8")
+        recommendation = recommendation.replace(
+            "## Authoring State\nAuthoring status: draft",
+            "  ## authoring state  \n Authoring Status : DRAFT ",
+        )
+        output.write_text(recommendation, encoding="utf-8")
+        digest = hashlib.sha256(output.read_bytes()).hexdigest().upper()
+
+        checklist = self.intake / "decisions" / "architecture_review_checklist.md"
+        review = checklist.read_text(encoding="utf-8")
+        review = re.sub(
+            r"Approved recommendation SHA-256: [0-9a-f]{64}",
+            f"Approved Recommendation SHA-256 : {digest}",
+            review,
+        )
+        review = review.replace(": approved", ": APPROVED")
+        review = review.replace(
+            "## Unresolved Blockers\nNone.",
+            "## unresolved blockers\n\nnone",
+        )
+        review = review.replace(
+            "## Rejected Or Deferred Alternatives",
+            "## rejected or deferred alternatives",
+        )
+        checklist.write_text(review, encoding="utf-8")
+
+        result = self.run_script("validate-architecture-gate", "example")
+        self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_gate_accepts_unambiguous_no_blocker_phrases(self) -> None:
+        for declaration in ("None", "none.", "- No blockers", "No unresolved blockers."):
+            with self.subTest(declaration=declaration):
+                self.write_architecture_artifacts()
+                checklist = self.intake / "decisions" / "architecture_review_checklist.md"
+                review = checklist.read_text(encoding="utf-8")
+                review = review.replace("## Unresolved Blockers\nNone.", f"## Unresolved Blockers\n\n{declaration}")
+                checklist.write_text(review, encoding="utf-8")
+                result = self.run_script("validate-architecture-gate", "example")
+                self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_gate_rejects_ambiguous_no_blocker_declaration(self) -> None:
+        self.write_architecture_artifacts()
+        checklist = self.intake / "decisions" / "architecture_review_checklist.md"
+        review = checklist.read_text(encoding="utf-8")
+        review = review.replace(
+            "## Unresolved Blockers\nNone.",
+            "## Unresolved Blockers\nNone, except hosting approval.",
+        )
+        checklist.write_text(review, encoding="utf-8")
+        result = self.run_script("validate-architecture-gate", "example")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("unresolved architecture blockers", result.stderr)
+
+    def test_gate_rejects_pending_case_insensitively(self) -> None:
+        self.write_architecture_artifacts()
+        checklist = self.intake / "decisions" / "architecture_review_checklist.md"
+        review = checklist.read_text(encoding="utf-8")
+        review = review.replace("Security decision: approved", "Security decision: PENDING")
+        checklist.write_text(review, encoding="utf-8")
+        result = self.run_script("validate-architecture-gate", "example")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("Security decision must be resolved", result.stderr)
 
     def test_missing_requirement_mapping_is_rejected(self) -> None:
         self.write_architecture_artifacts(traceability="REQ-001 AC-001 AC-002.")

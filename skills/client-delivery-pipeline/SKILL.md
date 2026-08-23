@@ -140,11 +140,17 @@ Project initialization requires all of the following in
 - resolved security, privacy, accessibility, backup/recovery, hosting, and paid-service decisions
 - `Authorization to proceed to project setup: approved`
 - a named reviewer and ISO `YYYY-MM-DD` review date
-- `None.` immediately below `## Unresolved Blockers`
+- an unambiguous no-blocker declaration under `## Unresolved Blockers`
 
 The checklist must also preserve rejected or deferred alternatives. Missing, pending,
 stale, or blocked evidence fails closed. The digest binds approval to the exact content
 reviewed; changing the recommendation requires renewed human approval.
+
+Human-authored approval fields are parsed case-insensitively with surrounding whitespace
+ignored. The no-blocker section accepts `None`, `None.`, `No blockers`, or
+`No unresolved blockers`, with optional blank lines and an optional Markdown bullet.
+This normalization does not guess misspellings, reinterpret ambiguous prose, relax the
+approved artifact path, or bypass digest and traceability checks.
 
 After completing review, the human can calculate the recorded digest with:
 

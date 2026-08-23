@@ -59,21 +59,136 @@ architecture_review() {
 review_field() {
   local checklist="$1"
   local field="$2"
-  sed -n "s/^${field}:[[:space:]]*//p" "$checklist" | head -n 1
+  awk -v wanted="$field" '
+    function trim(value) {
+      sub(/^[[:space:]]+/, "", value)
+      sub(/[[:space:]]+$/, "", value)
+      return value
+    }
+    BEGIN { wanted = tolower(trim(wanted)) }
+    {
+      separator = index($0, ":")
+      if (separator == 0) next
+      key = trim(substr($0, 1, separator - 1))
+      if (tolower(key) == wanted) {
+        print trim(substr($0, separator + 1))
+        exit
+      }
+    }
+  ' "$checklist"
+}
+
+trim_value() {
+  printf '%s' "$1" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//'
+}
+
+normalize_token() {
+  trim_value "$1" | tr '[:upper:]' '[:lower:]'
 }
 
 markdown_section() {
   local document="$1"
   local heading="$2"
-  awk -v heading="## $heading" '
-    $0 == heading { in_section = 1; next }
-    in_section && /^## / { exit }
+  awk -v heading="$heading" '
+    function trim(value) {
+      sub(/^[[:space:]]+/, "", value)
+      sub(/[[:space:]]+$/, "", value)
+      return value
+    }
+    BEGIN { heading = tolower("## " trim(heading)) }
+    tolower(trim($0)) == heading { in_section = 1; next }
+    in_section && trim($0) ~ /^##[[:space:]]+/ { exit }
     in_section { print }
   ' "$document"
 }
 
+markdown_heading_count() {
+  local document="$1"
+  local heading="$2"
+  awk -v heading="$heading" '
+    function trim(value) {
+      sub(/^[[:space:]]+/, "", value)
+      sub(/[[:space:]]+$/, "", value)
+      return value
+    }
+    BEGIN { heading = tolower("## " trim(heading)) }
+    tolower(trim($0)) == heading { count++ }
+    END { print count + 0 }
+  ' "$document"
+}
+
+text_field() {
+  local text="$1"
+  local field="$2"
+  printf '%s\n' "$text" | awk -v wanted="$field" '
+    function trim(value) {
+      sub(/^[[:space:]]+/, "", value)
+      sub(/[[:space:]]+$/, "", value)
+      return value
+    }
+    BEGIN { wanted = tolower(trim(wanted)) }
+    {
+      separator = index($0, ":")
+      if (separator == 0) next
+      key = trim(substr($0, 1, separator - 1))
+      if (tolower(key) == wanted) {
+        print trim(substr($0, separator + 1))
+        exit
+      }
+    }
+  '
+}
+
+text_field_count() {
+  local text="$1"
+  local field="$2"
+  printf '%s\n' "$text" | awk -v wanted="$field" '
+    function trim(value) {
+      sub(/^[[:space:]]+/, "", value)
+      sub(/[[:space:]]+$/, "", value)
+      return value
+    }
+    BEGIN { wanted = tolower(trim(wanted)) }
+    {
+      separator = index($0, ":")
+      if (separator == 0) next
+      key = trim(substr($0, 1, separator - 1))
+      if (tolower(key) == wanted) count++
+    }
+    END { print count + 0 }
+  '
+}
+
+section_declares_no_blockers() {
+  local document="$1"
+  local content normalized
+  content="$(markdown_section "$document" "Unresolved Blockers")"
+  normalized="$(
+    printf '%s\n' "$content" | awk '
+      function trim(value) {
+        sub(/^[[:space:]]+/, "", value)
+        sub(/[[:space:]]+$/, "", value)
+        return value
+      }
+      {
+        value = trim($0)
+        if (value != "") {
+          count++
+          answer = value
+        }
+      }
+      END {
+        if (count == 1) print answer
+      }
+    '
+  )"
+  normalized="$(printf '%s' "$normalized" | sed -E 's/^[-*][[:space:]]+//; s/[.][[:space:]]*$//' | tr '[:upper:]' '[:lower:]')"
+  [[ "$normalized" == "none" || "$normalized" == "no blockers" || \
+    "$normalized" == "no unresolved blockers" ]]
+}
+
 extract_requirement_ids() {
-  grep -Eo '(REQ|AC)-[0-9]{3}' | sort -u || true
+  grep -Eio '(REQ|AC)-[0-9]{3}' | tr '[:lower:]' '[:upper:]' | sort -u || true
 }
 
 require_architecture_approval() {
@@ -95,16 +210,16 @@ require_architecture_approval() {
     "Accessibility Requirements" "Backup and Recovery Expectations" \
     "Testing and Verification Strategy" "Requirements Traceability" "Execution Plan" \
     "Dependency and Sequencing Notes" "Architecture Decision Records"; do
-    heading_count="$(grep -Fxc "## $heading" "$output" || true)"
+    heading_count="$(markdown_heading_count "$output" "$heading")"
     [[ "$heading_count" -eq 1 ]] || \
       die "architecture recommendation must contain exactly one section: $heading"
   done
 
   authoring_section="$(markdown_section "$output" "Authoring State")"
-  status_count="$(printf '%s\n' "$authoring_section" | grep -Ec '^Authoring status:' || true)"
+  status_count="$(text_field_count "$authoring_section" "Authoring status")"
   [[ "$status_count" -eq 1 ]] || \
     die "architecture recommendation must declare exactly one Authoring status: draft or blocked"
-  authoring_status="$(printf '%s\n' "$authoring_section" | sed -n 's/^Authoring status:[[:space:]]*//p')"
+  authoring_status="$(normalize_token "$(text_field "$authoring_section" "Authoring status")")"
   [[ "$authoring_status" == "draft" || "$authoring_status" == "blocked" ]] || \
     die "architecture recommendation Authoring status must be draft or blocked"
   [[ "$authoring_status" == "draft" ]] || \
@@ -119,13 +234,13 @@ require_architecture_approval() {
   [[ -z "$missing_ids" ]] || \
     die "architecture Requirements Traceability section is missing approved IDs: $(printf '%s' "$missing_ids" | tr '\n' ' ')"
 
-  review_status="$(review_field "$checklist" "Architecture review status")"
-  approved_plan="$(review_field "$checklist" "Approved recommendation artifact")"
-  approved_digest="$(review_field "$checklist" "Approved recommendation SHA-256")"
-  authorization="$(review_field "$checklist" "Authorization to proceed to project setup")"
-  data_approval="$(review_field "$checklist" "Data-handling approval")"
-  reviewer="$(review_field "$checklist" "Reviewer")"
-  review_date="$(review_field "$checklist" "Review date")"
+  review_status="$(normalize_token "$(review_field "$checklist" "Architecture review status")")"
+  approved_plan="$(trim_value "$(review_field "$checklist" "Approved recommendation artifact")")"
+  approved_digest="$(normalize_token "$(review_field "$checklist" "Approved recommendation SHA-256")")"
+  authorization="$(normalize_token "$(review_field "$checklist" "Authorization to proceed to project setup")")"
+  data_approval="$(normalize_token "$(review_field "$checklist" "Data-handling approval")")"
+  reviewer="$(trim_value "$(review_field "$checklist" "Reviewer")")"
+  review_date="$(trim_value "$(review_field "$checklist" "Review date")")"
 
   [[ "$review_status" == "approved" ]] || die "architecture review status must be approved"
   [[ "$approved_plan" == "../outputs/architecture_recommendation.md" ]] || \
@@ -137,20 +252,21 @@ require_architecture_approval() {
     die "approved recommendation SHA-256 does not match the current recommendation artifact"
   [[ "$authorization" == "approved" ]] || die "project setup is not explicitly authorized"
   [[ "$data_approval" == "approved" ]] || die "data handling must be approved"
-  [[ -n "$reviewer" && "$reviewer" != "pending" ]] || die "architecture reviewer must be identified"
+  [[ -n "$reviewer" && "$(normalize_token "$reviewer")" != "pending" ]] || die "architecture reviewer must be identified"
   [[ "$review_date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || die "architecture review date must use YYYY-MM-DD"
 
   for field in "Security decision" "Privacy decision" "Accessibility decision" \
     "Backup and recovery decision" "Hosting decision" "Paid-service decision"; do
-    value="$(review_field "$checklist" "$field")"
+    value="$(normalize_token "$(review_field "$checklist" "$field")")"
     [[ -n "$value" && "$value" != "pending" ]] || die "$field must be resolved"
   done
 
-  grep -q '^## Unresolved Blockers$' "$checklist" || die "architecture checklist must record unresolved blockers"
-  grep -A1 '^## Unresolved Blockers$' "$checklist" | tail -n 1 | grep -qx 'None\.' || \
+  [[ "$(markdown_heading_count "$checklist" "Unresolved Blockers")" -eq 1 ]] || \
+    die "architecture checklist must record exactly one unresolved blockers section"
+  section_declares_no_blockers "$checklist" || \
     die "unresolved architecture blockers prevent project setup"
-  grep -q '^## Rejected Or Deferred Alternatives$' "$checklist" || \
-    die "architecture checklist must record rejected or deferred alternatives"
+  [[ "$(markdown_heading_count "$checklist" "Rejected Or Deferred Alternatives")" -eq 1 ]] || \
+    die "architecture checklist must record exactly one rejected or deferred alternatives section"
 }
 
 require_intake_approval() {
@@ -161,17 +277,17 @@ require_intake_approval() {
 
   [[ -s "$output" ]] || die "contract intake output missing or empty"
   [[ -s "$checklist" ]] || die "intake review checklist missing or empty"
-  status="$(review_field "$checklist" "Intake status")"
+  status="$(normalize_token "$(review_field "$checklist" "Intake status")")"
   [[ "$status" == "approved" ]] || die "intake status must be approved before architecture"
 
   for field in "Allowed paths" "Forbidden paths" "Raw source review" \
     "Redaction requirement" "External AI client-data use"; do
-    value="$(review_field "$checklist" "$field")"
+    value="$(normalize_token "$(review_field "$checklist" "$field")")"
     [[ -n "$value" && "$value" != "pending" ]] || die "$field must be explicitly resolved"
   done
 
-  grep -Eq 'REQ-[0-9]{3}' "$output" || die "approved intake must contain stable REQ-### IDs"
-  grep -Eq 'AC-[0-9]{3}' "$output" || die "approved intake must contain stable AC-### IDs"
+  grep -Eiq 'REQ-[0-9]{3}' "$output" || die "approved intake must contain stable REQ-### IDs"
+  grep -Eiq 'AC-[0-9]{3}' "$output" || die "approved intake must contain stable AC-### IDs"
 }
 
 cmd_init_intake() {
