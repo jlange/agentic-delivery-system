@@ -368,7 +368,6 @@ Forbidden paths:
 - \`$HOME/.ssh\`
 - \`$HOME/.config\`
 - \`$HOME/.codex\`
-- \`$HOME/.claude\`
 - unrelated client folders
 
 Task:
@@ -770,56 +769,6 @@ Completion report:
 - Commands run.
 - Verification results.
 - Any risks or follow-up work.
-EOF
-
-  cat > "$root/prompts-local/DEMO-001-claude-review.md" <<'EOF'
-# Claude Code Review Request
-
-Review the DEMO-001 implementation branch for this repository.
-
-Task file:
-
-- `tasks/DEMO-001-generate-synthetic-workbooks.md`
-
-You are reviewing only. Do not edit files, push, merge, deploy, or access files outside this repository.
-
-Allowed paths:
-
-- `demo/source/**`
-- `demo/master/**`
-- `demo/mapping/**`
-- `scripts/**`
-- `tests/**`
-- `tasks/**`
-- `docs/**`
-- `README.md`
-- `.gitignore`
-
-Forbidden paths:
-
-- `/mnt/c`
-- `/mnt/d`
-- `/mnt/e`
-- files outside this repository
-- real client or facility data
-
-Please review:
-
-- whether the implementation satisfies DEMO-001
-- bugs in `scripts/generate_demo_workbooks.py`
-- whether generated synthetic Excel files match the demo requirements
-- whether `metric_mapping.csv` is clear and usable
-- whether tests are meaningful and runnable
-- whether any real facility data appears present
-- whether generated artifacts are appropriate to commit
-
-Output:
-
-- Blocking findings
-- Non-blocking findings
-- Missing tests or verification gaps
-- Security/privacy concerns
-- Recommendation: approve, approve with notes, or request changes
 EOF
 
   if ! grep -q '^prompts-local/$' "$root/.git/info/exclude" 2>/dev/null; then

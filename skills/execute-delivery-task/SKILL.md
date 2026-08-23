@@ -1,6 +1,6 @@
 ---
 name: execute-delivery-task
-description: Carry one approved machine-readable delivery task through isolated implementation, verification, commit, exact-HEAD independent Claude review, pull request remediation, authorized merge, and post-merge verification. Use for dependency-ready product, database, frontend, backend, QA, design, security, or DevOps work and narrowly approved resumable amendments.
+description: Carry one approved machine-readable delivery task through isolated implementation, verification, commit, pull-request checks and remediation, authorized merge, and post-merge verification. Use for dependency-ready product, database, frontend, backend, QA, design, security, or DevOps work and narrowly approved resumable amendments.
 ---
 
 # Execute Delivery Task
@@ -56,16 +56,11 @@ Resume from the existing worktree after a matching human approval is durable.
    violations.
 4. Record concise command results and artifact evidence; do not claim skipped checks
    passed.
-5. Commit locally before review. Use `independent-local-review` against the configured
-   integration base. Claude Code must be read-only and review the complete three-dot diff.
-6. Fix valid in-scope findings; technically disposition rejected, duplicate,
-   out-of-scope, or non-required stylistic findings. Rerun verification, commit fixes,
-   and review again whenever HEAD changes. Reviewer failure is a blocker, never approval.
-7. Validate the current-HEAD review attestation, push the task branch, and create a pull
-   request into the integration branch when authorized by the approved wave.
-8. Wait for required checks and reviews. Address actionable feedback, repeating local
-   verification and exact-HEAD review after changes.
-9. Merge when all repository conditions pass and existing authorization permits it.
+5. Commit locally, push the task branch, and create a pull request into the integration
+   branch when authorized by the approved wave.
+6. Wait for configured CI checks and repository reviews. Address actionable feedback,
+   rerunning local verification and committing fixes after changes.
+7. Merge when all repository conditions pass and existing authorization permits it.
    Refresh the local integration branch and verify the merged commit and required checks.
 
 Read [references/evidence.md](references/evidence.md) when formatting completion
@@ -75,4 +70,4 @@ evidence.
 
 Report the task complete only after the pull request is merged, the local integration
 branch is synchronized, and the merged commit and required checks are verified. A local
-implementation, clean review, push, or open pull request is an intermediate state.
+implementation, push, or open pull request is an intermediate state.

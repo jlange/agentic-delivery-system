@@ -56,7 +56,6 @@ Unless explicitly approved for a specific task, agents must not inspect:
 - `~/.ssh`
 - `~/.config`
 - `~/.codex`
-- `~/.claude`
 - Windows Downloads
 - Windows Desktop
 - browser profile directories
@@ -91,7 +90,7 @@ If a transcript or source file contains sensitive content, create a redacted cop
 
 ## Running agents
 
-Do not start Codex, Claude Code, or other agents from:
+Do not start agents from:
 
 - `/mnt/c`
 - `/mnt/c/Users`

@@ -7,7 +7,6 @@ This document defines the default role of each tool in the agentic delivery syst
 | Tool | Default role | Should do | Should not do |
 |---|---|---|---|
 | Codex | Primary implementation and repo agent | Implement bounded tasks, edit files, run tests, review code, maintain docs | Merge, deploy, change billing, use production secrets, exceed task scope |
-| Claude Code | Secondary reviewer or alternate implementation agent | Independent reviews, debugging, architecture critique, alternate plans | Approve its own work, merge, deploy, change billing, access production secrets |
 | GitHub | Source of truth | Store code, issues, branches, pull requests, reviews, CI history | Replace human approval for scope, billing, production, or legal decisions |
 | Skills | Reusable workflow procedures | Encode repeatable methods, checklists, templates, scripts, and references | Store secrets, client data, one-off decisions, or product code |
 | Scripts | Repeatable automation | Create branches, validate scaffolds, run checks, generate templates | Perform destructive or production actions without approval |
@@ -25,21 +24,6 @@ Use Codex as the default working agent for:
 - reviewing changes when it did not implement them
 
 Codex should follow `AGENTS.md`, project config, task files, and applicable skills.
-
-## Claude Code
-
-Use Claude Code when a second model is useful.
-
-Best uses:
-
-- independent review
-- debugging difficult failures
-- architecture critique
-- test-plan critique
-- security and edge-case review
-- alternate implementation plan
-
-Do not require Claude Code for every task.
 
 ## GitHub
 

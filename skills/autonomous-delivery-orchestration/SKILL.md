@@ -1,6 +1,6 @@
 ---
 name: autonomous-delivery-orchestration
-description: Advance an approved delivery wave through dependency-ready task selection, isolated execution, verification, independent review, pull requests, merge detection, and automatic resumption. Use when a repository contains machine-readable approved task YAML and the operator wants bounded implementation to continue with minimal prompting while stopping for product decisions, authorization conflicts, unsafe operations, or failed mandatory gates.
+description: Advance an approved delivery wave through dependency-ready task selection, isolated execution, verification, pull-request checks, merge detection, and automatic resumption. Use when a repository contains machine-readable approved task YAML and the operator wants bounded implementation to continue with minimal prompting while stopping for product decisions, authorization conflicts, unsafe operations, or failed mandatory gates.
 ---
 
 # Autonomous Delivery Orchestration
@@ -35,15 +35,11 @@ own a bounded task.
    work when dependencies permit.
 6. Create an isolated branch or worktree and invoke `execute-delivery-task` with only
    the task path and repository starting point.
-7. After verification, request independent review by a different agent or reviewer.
-8. Require a committed implementation and use `independent-local-review`. The review
-   must be clean or fully dispositioned for the exact HEAD before push. Rerun it after
-   every commit; stop on reviewer unavailability or invalid output.
-9. Open a pull request when approved wave authorization permits remote writes. Attach
+7. Open a pull request when approved wave authorization permits remote writes. Attach
    requirement IDs, verification evidence, amendment history, and review outcome.
-10. Wait for required CI and configured reviews. Remediate actionable feedback and
-    repeat verification and local review after changes.
-11. Merge when required conditions pass and authorization already covers the merge.
+8. Wait for required CI and configured repository reviews. Remediate actionable
+   feedback and repeat verification after changes.
+9. Merge when required conditions pass and authorization already covers the merge.
     Refresh the integration branch and verify the merged commit and checks. Then restart
     this loop. Do not stop at pull-request creation.
 
@@ -66,8 +62,8 @@ When correct implementation needs a path or permission outside current authoriza
 Stop the affected work for a financial, legal, contractual, licensing, regulatory or
 compliance decision; a missing human-only credential or permission; ungranted
 production authority; an irreversible unresolved business decision; metadata conflict;
-unapproved scope expansion; sensitive-data risk; reviewer failure; destructive action
-without safeguards; incompatible review directions; or an unsatisfied mandatory check.
+unapproved scope expansion; sensitive-data risk; destructive action without safeguards;
+incompatible review directions; or an unsatisfied mandatory check.
 Routine Git, dependency, test, commit, push, pull-request, and authorized merge actions
 are not human decisions. Use normal environment permission prompts when required.
 

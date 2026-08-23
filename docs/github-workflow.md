@@ -81,8 +81,7 @@ Use independent review for:
 - client-critical user flows
 - large refactors
 
-Codex implementations require exact-HEAD, read-only Claude Code review before push.
-Agents may merge after required checks and reviews when the approved wave authorizes it.
+Agents may merge after configured checks and reviews when the approved wave authorizes it.
 
 ## CI
 

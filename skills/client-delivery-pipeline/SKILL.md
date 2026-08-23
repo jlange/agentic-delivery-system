@@ -1,6 +1,6 @@
 ---
 name: client-delivery-pipeline
-description: Use when running a supervised client project pipeline for contract intake, transcript or file review, approved intake folders, synthetic demo repository setup, task branch scaffolding, Codex implementation prompts, Claude review prompts, PR review, or client-demo workflow automation. Use for repeating the FundLTC-style process with new clients while preserving human approval gates, local data safety, and bounded agent paths.
+description: Use when running a supervised client project pipeline for contract intake, transcript or file review, approved intake folders, synthetic demo repository setup, task branch scaffolding, Codex implementation prompts, PR review, or client-demo workflow automation. Use for repeating the FundLTC-style process with new clients while preserving human approval gates, local data safety, and bounded agent paths.
 ---
 
 # Client Delivery Pipeline
@@ -15,7 +15,7 @@ The workflow supports:
 - Creating human review checklists.
 - Creating synthetic demo Git repositories.
 - Creating first implementation tasks.
-- Creating local Codex and Claude prompts.
+- Creating local implementation prompts.
 - Keeping review prompts out of committed task scope.
 
 ## Core Safety Rules
@@ -28,7 +28,7 @@ Preserve these gates:
 - Human approves the architecture and execution plan before project initialization.
 - Human approves real data access.
 - Human approves GitHub repo creation, PR creation, merge, and deployment.
-- Agents must not inspect broad local paths such as `/mnt/c`, `/mnt/d`, `/mnt/e`, `$HOME`, `.ssh`, `.config`, `.codex`, or `.claude`.
+- Agents must not inspect broad local paths such as `/mnt/c`, `/mnt/d`, `/mnt/e`, `$HOME`, `.ssh`, `.config`, or `.codex`.
 - Agents must not use production data, credentials, billing, or client systems unless explicitly approved.
 
 ## Script
@@ -208,7 +208,7 @@ git checkout -b task/DEMO-001-generate-synthetic-workbooks
 
 Run Codex with the local implementation prompt. Open a PR after committing and pushing.
 
-Use Claude or Codex for independent review. Review only unless the human explicitly asks for fixes.
+Use the repository's configured pull-request checks and review policy.
 
 Allowed review commands should be read-only or non-destructive verification commands. Do not approve commands that install global packages, access `/mnt/c`, merge, push, delete broadly, or deploy.
 
