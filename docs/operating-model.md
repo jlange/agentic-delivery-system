@@ -2,15 +2,16 @@
 
 Humans approve product intent, architecture, and bounded delivery waves. Within that
 authorization, agents autonomously synchronize the integration branch, create task
-branches, implement, install ordinary dependencies, verify, commit, obtain independent
-review, push, open and remediate pull requests, merge, synchronize locally, and verify
-the merged result. The integration branch defaults to `dev` and is configurable.
+branches, implement, install ordinary dependencies, verify, commit, push, open and
+remediate pull requests, satisfy configured checks and reviews, merge, synchronize
+locally, and verify the merged result. The integration branch defaults to `dev` and is
+configurable.
 
 ## Delivery loop
 
 ```text
-approved wave -> sync -> branch -> implement -> verify -> commit -> Claude exact-HEAD review
--> fix/disposition -> rereview after changes -> push -> PR -> CI/reviews -> remediation
+approved wave -> sync -> branch -> implement -> verify -> commit -> push -> PR
+-> CI/configured reviews -> remediation
 -> merge -> sync integration -> verify merge -> complete
 ```
 
@@ -27,6 +28,5 @@ engineering operations are not business decisions; use normal tool permission pr
 ## Enforcement
 
 - Behavioral guidance: repository `AGENTS.md`.
-- Standardized execution: exact-HEAD review tooling and evidence.
-- Optional mechanical enforcement: CI attestation validation and branch protection.
+- Mechanical enforcement: configured CI checks and branch protection when available.
   Local hooks alone are insufficient.

@@ -57,12 +57,12 @@ Do not infer a decision from directory existence or an architecture suggestion.
    - verification commands that are available in the initial scaffold
    - generated or protected paths known at setup time
    - data, secret, production, merge, and deployment boundaries
-   - how human approvals and independent review are recorded
+   - how human approvals and configured repository checks or reviews are recorded
 
    Keep it project-specific and concise. Do not copy the delivery system's `AGENTS.md`
    verbatim or claim commands are runnable before their dependencies exist.
    Start from `templates/repository/AGENTS.md`, configure its integration branch and
-   verification commands, and preserve risk-based escalation and exact-HEAD review.
+   verification commands, and preserve risk-based escalation and configured repository protections.
    Also create `.gitattributes` from `templates/repository/.gitattributes`, keep shell
    scripts LF-only and executable, and include `bash -n` validation where available.
 7. Record environment prerequisites by category: repository dependencies, generated

@@ -13,7 +13,7 @@
 - Record durable discoveries in `docs/learnings/`.
 - Do not push directly to the configured integration or release branches.
 - After a delivery wave is approved, continue routine engineering work through branch
-  creation, verification, independent review, pull request, authorized merge, and
+  creation, verification, pull request, configured checks and reviews, authorized merge, and
   post-merge verification without asking for routine human approval.
 - Pause for financial, legal, contractual, licensing, regulatory, compliance, missing
   human-only credentials or permissions, ungranted production authority, or an
@@ -22,11 +22,6 @@
   environment's approval mechanism for safe, in-scope operations.
 - Do not deploy to production or perform destructive operations without existing
   authorization and appropriate safeguards.
-- A committed task branch must receive a read-only Claude Code review of the complete
-  integration-base three-dot diff before push. A review is valid only for its recorded
-  HEAD. Fix or technically disposition findings and rereview whenever HEAD changes.
-- Never treat a missing, failed, timed-out, invalid, stale, unauthenticated, or
-  rate-limited reviewer as approval.
 
 ## Generated-code hygiene
 

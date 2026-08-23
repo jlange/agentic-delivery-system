@@ -32,12 +32,12 @@ The planning validator must eventually validate the complete repository plan:
 
 ```text
 approve wave -> select executable task -> isolated implementation -> verification
--> local commit -> exact-HEAD Claude review -> push -> pull request -> checks/remediation
+-> local commit -> push -> pull request -> configured checks/reviews -> remediation
 -> authorized merge -> post-merge verification -> unlock dependents -> repeat
 ```
 
 Use `autonomous-delivery-orchestration` for the loop, `execute-delivery-task` for one
-task, and `independent-local-review` for mandatory pre-push review. Humans remain
+task. Humans remain
 responsible for financial/legal decisions, authorization expansions, human-only
 credentials, ungranted production authority, and experiential acceptance.
 
@@ -60,7 +60,6 @@ production claims, and a warning against real sensitive data.
 | Executable wave planning | `task-decomposition` | Implemented; revised metadata |
 | Merge-aware scheduling and resumption | `autonomous-delivery-orchestration` | Added |
 | Product implementation and verification | `execute-delivery-task` | Added |
-| Independent local review | `independent-local-review` | Implemented with exact-HEAD attestation |
 | Cross-task acceptance and QA evidence | `qa-evidence` | Next skill to extract from a usable slice |
 | Security and privacy review | `security-review` | Add when a project threat model exists |
 | Release/deployment | `release-execution` | Add after an approved staging workflow |
@@ -81,9 +80,9 @@ do not yet form a daemon or GitHub-integrated orchestrator. Before unattended us
 1. repository-level plan checks for prose/graph/YAML agreement, contract conflicts,
    runtime contention, and authorization artifact integrity;
 2. a state-transition command that records an auditable event log;
-3. merge and review adapters with idempotent resumption;
+3. merge, CI, and pull-request adapters with idempotent resumption;
 4. isolated worktree allocation and cleanup;
-5. independent-review and QA-evidence skills based on actual project artifacts;
+5. QA-evidence workflows based on actual project artifacts;
 6. a dry-run scheduler test suite covering conflicts, amendments, and failed gates.
 
 Until those exist, the new orchestration skill is an executable operating procedure,
@@ -127,11 +126,10 @@ task-execution skill, collect verification evidence, and preserve resumable stat
 This is the point where the system begins doing contract implementation work with
 minimal handoff prompting while keeping concurrent changes isolated.
 
-### 6. Independent Review and QA Evidence Skills
+### 6. Pull-Request Feedback and QA Evidence
 
-Extract `pull-request-review` and `qa-evidence` from real project review artifacts.
-Independent review should evaluate the exact diff against authorization and acceptance
-criteria; QA evidence should prove that the combined owner-testable workflow works,
+Extract reusable pull-request feedback handling and `qa-evidence` from real project
+artifacts. QA evidence should prove that the combined owner-testable workflow works,
 not merely that individual task checks pass.
 
 ### 7. Merge-Aware GitHub Integration

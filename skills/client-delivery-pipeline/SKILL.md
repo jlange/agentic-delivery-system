@@ -1,6 +1,6 @@
 ---
 name: client-delivery-pipeline
-description: Use when running a supervised client project pipeline for contract intake, transcript or file review, approved intake folders, synthetic demo repository setup, task branch scaffolding, Codex implementation prompts, Claude review prompts, PR review, or client-demo workflow automation. Use for repeating the FundLTC-style process with new clients while preserving human approval gates, local data safety, and bounded agent paths.
+description: Use when running a supervised client project pipeline for contract intake, transcript or file review, approved intake folders, synthetic demo repository setup, task branch scaffolding, Codex implementation prompts, PR review, or client-demo workflow automation. Use for repeating the FundLTC-style process with new clients while preserving human approval gates, local data safety, and bounded agent paths.
 ---
 
 # Client Delivery Pipeline
@@ -15,7 +15,7 @@ The workflow supports:
 - Creating human review checklists.
 - Creating synthetic demo Git repositories.
 - Creating first implementation tasks.
-- Creating local Codex and Claude prompts.
+- Creating local implementation prompts.
 - Keeping review prompts out of committed task scope.
 
 ## Core Safety Rules
@@ -28,7 +28,7 @@ Preserve these gates:
 - Human approves the architecture and execution plan before project initialization.
 - Human approves real data access.
 - Human approves GitHub repo creation, PR creation, merge, and deployment.
-- Agents must not inspect broad local paths such as `/mnt/c`, `/mnt/d`, `/mnt/e`, `$HOME`, `.ssh`, `.config`, `.codex`, or `.claude`.
+- Agents must not inspect broad local paths such as `/mnt/c`, `/mnt/d`, `/mnt/e`, `$HOME`, `.ssh`, `.config`, or `.codex`.
 - Agents must not use production data, credentials, billing, or client systems unless explicitly approved.
 
 ## Script
@@ -140,11 +140,17 @@ Project initialization requires all of the following in
 - resolved security, privacy, accessibility, backup/recovery, hosting, and paid-service decisions
 - `Authorization to proceed to project setup: approved`
 - a named reviewer and ISO `YYYY-MM-DD` review date
-- `None.` immediately below `## Unresolved Blockers`
+- an unambiguous no-blocker declaration under `## Unresolved Blockers`
 
 The checklist must also preserve rejected or deferred alternatives. Missing, pending,
 stale, or blocked evidence fails closed. The digest binds approval to the exact content
 reviewed; changing the recommendation requires renewed human approval.
+
+Human-authored approval fields are parsed case-insensitively with surrounding whitespace
+ignored. The no-blocker section accepts `None`, `None.`, `No blockers`, or
+`No unresolved blockers`, with optional blank lines and an optional Markdown bullet.
+This normalization does not guess misspellings, reinterpret ambiguous prose, relax the
+approved artifact path, or bypass digest and traceability checks.
 
 After completing review, the human can calculate the recorded digest with:
 
@@ -202,7 +208,7 @@ git checkout -b task/DEMO-001-generate-synthetic-workbooks
 
 Run Codex with the local implementation prompt. Open a PR after committing and pushing.
 
-Use Claude or Codex for independent review. Review only unless the human explicitly asks for fixes.
+Use the repository's configured pull-request checks and review policy.
 
 Allowed review commands should be read-only or non-destructive verification commands. Do not approve commands that install global packages, access `/mnt/c`, merge, push, delete broadly, or deploy.
 

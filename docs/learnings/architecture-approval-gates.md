@@ -15,6 +15,13 @@ material operational decisions, records no unresolved blockers, approves data ha
 and explicitly authorizes project setup. The existence of an intake approval or an
 architecture document alone is not sufficient evidence.
 
+Fail-closed parsing does not require brittle presentation matching. Human-authored
+status fields may safely ignore capitalization and surrounding whitespace, and a
+no-blocker declaration may accept a small explicit allowlist such as `None` or
+`No unresolved blockers`. Validators should ignore blank lines and harmless Markdown
+bullets while continuing to reject misspellings, ambiguous prose, stale digests,
+incorrect artifact paths, and unresolved decisions.
+
 Traceability gates should compare unique approved intake IDs against IDs found only in
 the recommendation's traceability section. Searching the whole document or checking for
 one example ID can hide omissions; validators should report the complete missing set.
